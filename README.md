@@ -1,3 +1,3 @@
 # composable-architecture-extensions
 
-A description of this package.
+> The package is on prototyping stage

@@ -1,0 +1,39 @@
+import CocoaExtensions
+import ComposableCore
+import CocoaAliases
+
+public protocol ComposableViewControllerProtocol:
+  CocoaViewController,
+  ComposableObjectProtocol
+{}
+
+open class ComposableViewController<
+  State,
+  Action
+>: CustomCocoaViewController, ComposableViewControllerProtocol {
+  public let core: ComposableCore<State, Action> = .init()
+  
+  open override func _commonInit() {
+    super._commonInit()
+    self.__setupCore()
+  }
+  
+  open func scope(
+    _ store: Core.Store?
+  ) {}
+  
+  open func storeWillSet(
+    from oldStore: Core.Store?,
+    to newStore: Core.Store?
+  ) {}
+  
+  open func storeWasSet(
+    from oldStore: Core.Store?,
+    to newStore: Core.Store?
+  ) {}
+  
+  open func bind(
+    _ state: Core.StorePublisher,
+    into cancellables: inout Core.Cancellables
+  ) {}
+}
