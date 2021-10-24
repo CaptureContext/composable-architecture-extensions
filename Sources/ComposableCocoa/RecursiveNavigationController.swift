@@ -1,3 +1,4 @@
+#if os(iOS)
 import CocoaAliases
 import ComposableArchitecture
 import Prelude
@@ -204,3 +205,4 @@ extension PublishersProxy where Base: _RecursiveControllerPopSubjectProvider {
       .recursiveControllerPopSubject.eraseToAnyPublisher()
   }
 }
+#endif
