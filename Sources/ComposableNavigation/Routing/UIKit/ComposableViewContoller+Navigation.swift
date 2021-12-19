@@ -70,7 +70,27 @@ where
         }
       }
     
-    let second = navigationController?
+    let second: Cancellable? = navigationController?
+      .publisher(for: #selector(UINavigationController.popToViewController))
+      .receive(on: UIScheduler.shared)
+      .sink { [weak self] in
+        guard
+          let self = self,
+          let navigationController = self.navigationController,
+          !navigationController.viewControllers.contains(self)
+        else { return }
+        if let coordinator = self.navigationController?.transitionCoordinator {
+          coordinator.animate(alongsideTransition: nil) { context in
+            if !context.isCancelled {
+              self.core.send(action(.dismiss))
+            }
+          }
+        } else {
+          self.core.send(action(.dismiss))
+        }
+      }
+    
+    let third = navigationController?
       .publisher(for: #selector(UINavigationController.popToRootViewController))
       .receive(on: UIScheduler.shared)
       .sink { [weak self] in
@@ -80,6 +100,7 @@ where
     let cancellable = AnyCancellable {
       first?.cancel()
       second?.cancel()
+      third?.cancel()
     }
     
     cancellable.store(

@@ -3,20 +3,20 @@ import XCTest
 
 final class ComposableCoreTests: XCTestCase {
   func testScoping() {
-    struct DerivedState: Equatable {
-      var value: Int = 0
-    }
-    
     struct ParentState: Equatable {
       var derived: DerivedState = .init()
     }
     
-    enum DerivedAction: Equatable {
-      case inc, dec
+    struct DerivedState: Equatable {
+      var value: Int = 0
     }
     
     enum ParentAction: Equatable {
       case derived(DerivedAction)
+    }
+    
+    enum DerivedAction: Equatable {
+      case inc, dec
     }
     
     let derivedReducer = Reducer<

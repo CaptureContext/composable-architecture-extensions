@@ -114,9 +114,15 @@ let package = Package(
       ]
     ),
     .testTarget(
-      name: "ComposableExtensionsTests",
+      name: "ComposableCoreTests",
       dependencies: [
-        .target(name: "ComposableExtensions")
+        .target(name: "ComposableCore")
+      ]
+    ),
+    .testTarget(
+      name: "ComposableNavigationTests",
+      dependencies: [
+        .target(name: "ComposableNavigation")
       ]
     ),
   ]

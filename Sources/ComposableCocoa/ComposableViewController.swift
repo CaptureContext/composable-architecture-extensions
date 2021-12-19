@@ -13,8 +13,8 @@ open class ComposableViewController<
 >: CustomCocoaViewController, ComposableViewControllerProtocol {
   public let core: ComposableCore<State, Action> = .init()
   
-  open override func _commonInit() {
-    super._commonInit()
+  open override func _init() {
+    super._init()
     self.__setupCore()
   }
   

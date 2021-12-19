@@ -183,7 +183,7 @@ extension UserProfileViewController {
     
     var tableView = UITableView(frame: .zero, style: .plain)
     
-    override func _commonInit() {
+    override func _init() {
       addSubview(tableView)
     }
     
@@ -372,7 +372,7 @@ extension UserProfileThreadItemsViewController {
       collectionViewLayout: .compositional(.profileThreadItems())
     )
     
-    override func _commonInit() {
+    override func _init() {
       collectionView.bounces = false
       addSubview(collectionView)
     }

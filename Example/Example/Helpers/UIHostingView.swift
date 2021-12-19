@@ -33,8 +33,8 @@ class UIHostingView<RootView: View>: CustomCocoaView {
     set { controller.rootView = newValue }
   }
   
-  override func _commonInit() {
-    super._commonInit()
+  override func _init() {
+    super._init()
     self.backgroundColor = .clear
     self.controller.view.backgroundColor = .clear
     self.addSubview(controller.view)
