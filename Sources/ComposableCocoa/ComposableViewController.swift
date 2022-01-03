@@ -1,3 +1,4 @@
+#if !os(watchOS)
 import CocoaExtensions
 import ComposableCore
 import CocoaAliases
@@ -37,3 +38,4 @@ open class ComposableViewController<
     into cancellables: inout Core.Cancellables
   ) {}
 }
+#endif

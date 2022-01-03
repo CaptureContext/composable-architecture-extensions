@@ -1,4 +1,6 @@
 import ComposableArchitecture
+import ComposableDependencies
+import FoundationExtensions
 
 extension Reducer {
   public static func recursive(
@@ -23,11 +25,22 @@ extension Reducer {
     action toLocalAction: CasePath<Action, LocalAction>,
     environment toLocalEnvironment: @escaping (Environment) -> LocalEnvironment
   ) -> Reducer {
-    Reducer { state, action, environment in
-      guard let localAction = toLocalAction.extract(from: action) else { return .none }
-      return reducer()
-        .run(&state[keyPath: toLocalState], localAction, toLocalEnvironment(environment))
-        .map { toLocalAction.embed($0) }
+    return Reducer<LocalState, LocalAction, LocalEnvironment>
+      .lazy(reducer)
+      .pullback(
+        state: toLocalState,
+        action: toLocalAction,
+        environment: toLocalEnvironment
+      )
+  }
+}
+
+extension Reducer {
+  public static func lazy(_ reducer: @escaping () -> Reducer) -> Reducer {
+    var _reducer: Reducer!
+    return Reducer { state, action, environment in
+      if _reducer.isNil { _reducer = reducer() }
+      return _reducer.run(&state, action, environment)
     }
   }
 }

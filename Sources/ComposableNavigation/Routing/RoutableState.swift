@@ -6,13 +6,3 @@ public protocol RoutableState {
   associatedtype Route: Hashable
   var currentRoute: Route { get set }
 }
-
-public protocol TaggedRoute: Equatable {
-  associatedtype Tag: Hashable
-  var tag: Tag { get }
-}
-
-extension Optional: TaggedRoute where Wrapped: TaggedRoute {
-  public typealias Tag = Optional<Wrapped.Tag>
-  public var tag: Tag { self?.tag }
-}

@@ -5,7 +5,7 @@ extension Reducer where State: RoutableState, Action == State.RoutingAction {
   public static func router() -> Reducer {
     Reducer { state, action, environment in
       switch action {
-      case let .route(to: newRoute):
+      case let .navigate(to: newRoute):
         state.currentRoute = newRoute
         return .none
       }

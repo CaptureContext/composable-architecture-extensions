@@ -119,7 +119,7 @@ extension Reducer {
         return .none
         
       case .toggle:
-        return Effect(value: state.isNil ? .dismiss : .present)
+        return Effect(value: state.isNotNil ? .dismiss : .present)
         
       case .action:
         return .none

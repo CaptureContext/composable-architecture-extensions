@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import ComposableExtensionsCore
 
 extension Reducer {
   public func stateBasedRouting<LocalState, LocalAction>() -> Reducer
@@ -6,12 +7,12 @@ extension Reducer {
     var hadState: Bool? = nil
     return Reducer.combine(
       Reducer { state, _, _ in
-        hadState = state.state != nil // save previous state
+        hadState = state.state.isNotNil // save previous state
         return .none
       },
       self, // run reducer
       Reducer { state, action, environment in
-        let hasState = state.state != nil // get current state
+        let hasState = state.state.isNotNil // get current state
         
         if case .dismiss = action, hasState { // nil on dismiss
           state.state = nil
@@ -39,13 +40,13 @@ extension Reducer {
     )
   }
 
-  public func dismissOn<LocalAction>(_ paths: CasePathValueDetector<LocalAction>...) -> Reducer
+  public func dismissOn<LocalAction>(_ paths: CaseMarker<LocalAction>...) -> Reducer
   where Action == ModalAction<LocalAction>, LocalAction: Equatable {
     .combine(
       self,
       Reducer { state, action, environment in
         guard case let .action(action) = action else { return .none }
-        return paths.contains { $0.is(action) }
+        return paths.contains { $0.matches(action) }
           ? Effect(value: .dismiss)
           : .none
       }
@@ -66,57 +67,17 @@ extension Reducer {
     )
   }
 
-  public func presentOn<LocalAction>(_ paths: CasePathValueDetector<LocalAction>...) -> Reducer
+  public func presentOn<LocalAction>(_ paths: CaseMarker<LocalAction>...) -> Reducer
   where Action == ModalAction<LocalAction>, LocalAction: Equatable {
     .combine(
       self,
       Reducer { state, action, environment in
         guard case let .action(action) = action else { return .none }
-        return paths.contains { $0.is(action) }
+        return paths.contains { $0.matches(action) }
           ? Effect(value: .present)
           : .none
       }
     )
   }
-}
-
-// MARK: CasePathValueDetector
-
-public struct CasePathValueDetector<Root> {
-  private let _detect: (Root) -> Bool
-
-  public func `is`(_ action: Root) -> Bool {
-    _detect(action)
-  }
-
-  public static func detector<Value>(
-    for casePath: CasePath<Root, Value>
-  ) -> CasePathValueDetector {
-    CasePathValueDetector(_detect: { casePath.extract(from: $0) != nil })
-  }
-}
-
-/// Returns a case path for the given embed function.
-///
-/// - Note: This operator is only intended to be used with enum cases that have no associated
-///   values. Its behavior is otherwise undefined.
-/// - Parameter embed: An embed function.
-/// - Returns: A case path.
-public prefix func / <Root, Value>(
-  embed: @escaping (Value) -> Root
-) -> CasePathValueDetector<Root> {
-  .detector(for: /embed)
-}
-
-/// Returns a case path for the given embed function.
-///
-/// - Note: This operator is only intended to be used with enum cases that have no associated
-///   values. Its behavior is otherwise undefined.
-/// - Parameter embed: An embed function.
-/// - Returns: A case path.
-public prefix func / <Root>(
-  case: Root
-) -> CasePathValueDetector<Root> {
-  .detector(for: /`case`)
 }
 

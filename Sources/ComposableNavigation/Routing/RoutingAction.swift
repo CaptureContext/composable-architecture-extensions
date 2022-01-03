@@ -1,27 +1,27 @@
 import ComposableArchitecture
 import Foundation
 
-public protocol RouterAction: Equatable {
+public protocol RouterAction {
   associatedtype Route: Hashable
   static func router(_: RoutingAction<Route>) -> Self
 }
 
 extension RouterAction {
-  public static func route(to route: Route) -> Self {
-    return .router(.route(to: route))
+  public static func navigate(to route: Route) -> Self {
+    return .router(.navigate(to: route))
   }
 }
 
 public enum RoutingAction<Route: Hashable>: Equatable {
-  case route(to: Route)
+  case navigate(to: Route)
   public var route: Route {
     switch self {
-    case let .route(to: route):
+    case let .navigate(to: route):
       return route
     }
   }
 }
 
 extension RoutingAction where Route: ExpressibleByNilLiteral {
-  public static var dismiss: RoutingAction { .route(to: nil) }
+  public static var dismiss: RoutingAction { .navigate(to: nil) }
 }

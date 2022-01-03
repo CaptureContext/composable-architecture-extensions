@@ -1,6 +1,12 @@
-public protocol Taggable {
+public protocol Taggable: Hashable {
   associatedtype Tag: Hashable
   var tag: Tag { get }
+}
+
+extension Taggable {
+  public func hash(into hasher: inout Hasher) {
+    hasher.combine(tag)
+  }
 }
 
 extension Optional: Taggable where Wrapped: Taggable {
@@ -10,7 +16,7 @@ extension Optional: Taggable where Wrapped: Taggable {
 
 /// A wrapper around a value and a hashable identifier that conforms to identifiable.
 @dynamicMemberLookup
-public struct Tagged<Tag, Value>: Taggable where Tag: Hashable {
+public struct Tagged<Tag, Value: Equatable>: Taggable, Hashable where Tag: Hashable {
   public let tag: Tag
   public var value: Value
   
@@ -61,7 +67,11 @@ public struct Tagged<Tag, Value>: Taggable where Tag: Hashable {
   }
 }
 
+extension Tagged where Value: Taggable, Value.Tag == Tag {
+  public init(_ value: Value) {
+    self.init(value, tag: value.tag)
+  }
+}
+
 extension Tagged: Decodable where Tag: Decodable, Value: Decodable {}
 extension Tagged: Encodable where Tag: Encodable, Value: Encodable {}
-extension Tagged: Equatable where Value: Equatable {}
-extension Tagged: Hashable where Value: Hashable {}

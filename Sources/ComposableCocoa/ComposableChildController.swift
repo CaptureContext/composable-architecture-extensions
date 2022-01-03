@@ -1,3 +1,4 @@
+#if !os(watchOS)
 import Combine
 import ComposableArchitecture
 import DeclarativeConfiguration
@@ -84,3 +85,4 @@ where Controller.State: Equatable {
     }
   }
 }
+#endif

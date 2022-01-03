@@ -1,5 +1,5 @@
 import XCTest
-@testable import ComposableExtensions
+@testable import ComposableCore
 
 final class ComposableCoreTests: XCTestCase {
   func testScoping() {

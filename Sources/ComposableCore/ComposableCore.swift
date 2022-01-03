@@ -8,6 +8,7 @@
 
 import CombineExtensions
 import ComposableArchitecture
+import StoreSchedulers
 
 #if canImport(SwiftUI)
   import SwiftUI
@@ -194,7 +195,7 @@ extension ComposableCore {
       let newID: ObjectIdentifier? = store.getAssociatedObject(forKey: "parent_store")
       return oldID == newID
     }
-    if self.store == nil || !isSameParent() {
+    if self.store.isNil || !isSameParent() {
       self.setStore(store, removeDuplicates: isDuplicate)
     }
   }

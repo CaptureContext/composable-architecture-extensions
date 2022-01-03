@@ -10,39 +10,48 @@ let package = Package(
     .tvOS(.v13),
     .watchOS(.v6),
   ],
-  products: [
+  products: [ // MARK: - Products
     .library(
       name: "ComposableCocoa",
+      type: .static,
       targets: ["ComposableCocoa"]
     ),
     .library(
       name: "ComposableCore",
+      type: .static,
       targets: ["ComposableCore"]
     ),
     .library(
       name: "ComposableExtensions",
+      type: .static,
       targets: ["ComposableExtensions"]
     ),
     .library(
       name: "ComposableNavigation",
+      type: .static,
       targets: ["ComposableNavigation"]
     ),
+    .library(
+      name: "StoreSchedulers",
+      type: .static,
+      targets: ["StoreSchedulers"]
+    )
   ],
   dependencies: [
     .package(
       name: "swift-composable-architecture",
       url: "https://github.com/pointfreeco/swift-composable-architecture.git",
-      .upToNextMajor(from: "0.28.1")
+      .upToNextMajor(from: "0.31.0")
     ),
     .package(
       name: "swift-composable-environment",
       url: "https://github.com/tgrapperon/swift-composable-environment.git",
-      .upToNextMinor(from: "0.4.0")
+      .upToNextMinor(from: "0.5.1")
     ),
     .package(
       name: "combine-extensions",
       url: "https://github.com/capturecontext/combine-extensions.git",
-      .upToNextMinor(from: "0.0.1")
+      .upToNextMinor(from: "0.0.3")
     ),
     .package(
       name: "swift-standard-extensions",
@@ -50,11 +59,12 @@ let package = Package(
       .branch("develop")
     )
   ],
-  targets: [
+  targets: [ // MARK: - Targets
     .target(
       name: "ComposableCocoa",
       dependencies: [
         .target(name: "ComposableCore"),
+        .target(name: "ComposableNavigation"),
         .product(
           name: "ComposableArchitecture",
           package: "swift-composable-architecture"
@@ -68,6 +78,8 @@ let package = Package(
     .target(
       name: "ComposableCore",
       dependencies: [
+        .target(name: "ComposableExtensionsCore"),
+        .target(name: "StoreSchedulers"),
         .product(
           name: "ComposableArchitecture",
           package: "swift-composable-architecture"
@@ -83,15 +95,7 @@ let package = Package(
       dependencies: [
         .target(name: "ComposableCocoa"),
         .target(name: "ComposableCore"),
-        .target(name: "ComposableNavigation"),
-        .product(
-          name: "ComposableArchitecture",
-          package: "swift-composable-architecture"
-        ),
-        .product(
-          name: "ComposableEnvironment",
-          package: "swift-composable-environment"
-        )
+        .target(name: "ComposableNavigation")
       ]
     ),
     .target(
@@ -100,23 +104,52 @@ let package = Package(
         .product(
           name: "ComposableArchitecture",
           package: "swift-composable-architecture"
+        ),
+        .product(
+          name: "FoundationExtensions",
+          package: "swift-standard-extensions"
+        ),
+        .product(
+          name: "CombineExtensions",
+          package: "combine-extensions"
         )
       ]
     ),
     .target(
       name: "ComposableNavigation",
       dependencies: [
-        .target(name: "ComposableCocoa"),
+        .target(name: "ComposableExtensionsCore"),
         .product(
           name: "ComposableArchitecture",
           package: "swift-composable-architecture"
-        ),
+        )
       ]
     ),
+    .target(
+      name: "StoreSchedulers",
+      dependencies: [
+        .product(
+          name: "CombineExtensions",
+          package: "combine-extensions"
+        ),
+        .product(
+          name: "ComposableDependencies",
+          package: "swift-composable-environment"
+        )
+      ]
+    ),
+    
+    // MARK: - Tests
     .testTarget(
       name: "ComposableCoreTests",
       dependencies: [
         .target(name: "ComposableCore")
+      ]
+    ),
+    .testTarget(
+      name: "ComposableExtensionsCoreTests",
+      dependencies: [
+        .target(name: "ComposableExtensionsCore")
       ]
     ),
     .testTarget(

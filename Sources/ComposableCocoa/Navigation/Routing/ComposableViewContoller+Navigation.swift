@@ -1,6 +1,6 @@
-#if os(iOS)
+#if canImport(UIKit) && !os(watchOS)
 import ComposableArchitecture
-import ComposableCocoa
+import ComposableNavigation
 import Combine
 import CocoaAliases
 import FoundationExtensions
@@ -23,7 +23,7 @@ where
   ) {
     guard let navigationController = self.navigationController else { return }
     let destination = configuration.target
-    if target == .none, navigationController.visibleViewController !== self {
+    if target.isNil, navigationController.visibleViewController !== self {
       guard navigationController.viewControllers.contains(self) else {
         navigationController.popToRootViewController(animated: true)
         return
@@ -139,7 +139,7 @@ where
 extension ComposableViewController
 where
   State: RoutableState,
-  State.Route: TaggedRoute,
+  State.Route: Taggable,
   State.Route: ExpressibleByNilLiteral
 {
   public func configureRoutes(
