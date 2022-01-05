@@ -56,7 +56,7 @@ let package = Package(
     .package(
       name: "swift-standard-extensions",
       url: "https://github.com/capturecontext/swift-standard-extensions.git",
-      .branch("develop")
+      .branch("main")
     )
   ],
   targets: [ // MARK: - Targets
