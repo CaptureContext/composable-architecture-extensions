@@ -55,7 +55,7 @@ let package = Package(
     ),
     .package(
       name: "swift-standard-extensions",
-      url: "https://github.com/edudo-inc/swift-standard-extensions.git",
+      url: "https://github.com/capturecontext/swift-standard-extensions.git",
       .branch("develop")
     )
   ],
