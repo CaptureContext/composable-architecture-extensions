@@ -9,6 +9,7 @@
 import CombineExtensions
 import ComposableArchitecture
 import StoreSchedulers
+import FoundationExtensions
 
 #if canImport(SwiftUI)
   import SwiftUI
@@ -87,7 +88,7 @@ public final class ComposableCore<State, Action>: ComposableCoreProtocol {
     guard let store = store else { return releaseStore() }
 
     storeCancellables.removeAll()
-    store.ifLet(
+    store._ifLet(
       then: { [weak self] store in
         self?.setStore(store, removeDuplicates: isDuplicate)
       },
@@ -168,10 +169,8 @@ extension ComposableCore {
     removeDuplicates isDuplicate: @escaping (State, State) -> Bool
   ) {
     storeCancellables.removeAll()
-    let sid: ObjectIdentifier? = store.getAssociatedObject(forKey: "parent_store")
-    store.ifLet(
+    store._ifLet(
       then: { [weak self] store in
-        store.setAssociatedObject(sid, forKey: "parent_store")
         self?.setStoreIfNeeded(store, removeDuplicates: isDuplicate)
       },
       else: { [weak self] in
@@ -190,65 +189,38 @@ extension ComposableCore {
     _ store: Store,
     removeDuplicates isDuplicate: @escaping (State, State) -> Bool
   ) {
-    func isSameParent() -> Bool {
-      let oldID: ObjectIdentifier? = self.store?.getAssociatedObject(forKey: "parent_store")
-      let newID: ObjectIdentifier? = store.getAssociatedObject(forKey: "parent_store")
-      return oldID == newID
-    }
-    if self.store.isNil || !isSameParent() {
-      self.setStore(store, removeDuplicates: isDuplicate)
-    }
+    guard self.store.isNil || not(equal(self.store?.parentStoreID, store.parentStoreID))
+    else { return }
+    self.setStore(store, removeDuplicates: isDuplicate)
   }
 }
 
-protocol AssociationProvider {}
-
-extension Store: AssociationProvider {
+extension Store: AssociatingObject {
   public func _scope<LocalState, LocalAction>(
     state: @escaping (State) -> LocalState,
     action: @escaping (LocalAction) -> Action
   ) -> Store<LocalState, LocalAction> {
     let store = self.scope(state: state, action: action)
-    store.setParent(self)
+    store.parentStoreID = ObjectIdentifier(self)
     return store
   }
   
-  public func setParent<GlobalState, GlobalAction>(
-    _ store: Store<GlobalState, GlobalAction>
-  ) {
-    setAssociatedObject(ObjectIdentifier(store), forKey: "parent_store")
-  }
-}
-
-extension AssociationProvider {
-  @inlinable
-  @discardableResult
-  public func setAssociatedObject<Object>(
-    _ object: Object,
-    forKey key: StaticString,
-    policy: objc_AssociationPolicy = .OBJC_ASSOCIATION_RETAIN_NONATOMIC
-  ) -> Bool {
-    key.withUTF8Buffer { pointer in
-      if let p = pointer.baseAddress.map(UnsafeRawPointer.init) {
-        objc_setAssociatedObject(self, p, object, policy)
-        return true
-      } else {
-        return false
-      }
-    }
+  public func _ifLet<Wrapped>(
+    then unwrap: @escaping (Store<Wrapped, Action>) -> Void,
+    else: @escaping () -> Void = {}
+  ) -> Cancellable where State == Wrapped? {
+    let parentStoreID = self.parentStoreID
+    return ifLet(
+      then: { store in
+        store.parentStoreID = parentStoreID
+        unwrap(store)
+      },
+      else: `else`
+    )
   }
   
-  @inlinable
-  public func getAssociatedObject<Object>(
-    of type: Object.Type = Object.self,
-    forKey key: StaticString
-  ) -> Object? {
-    key.withUTF8Buffer { pointer in
-      if let p = pointer.baseAddress.map(UnsafeRawPointer.init) {
-        return objc_getAssociatedObject(self, p) as? Object
-      } else {
-        return nil
-      }
-    }
+  public var parentStoreID: ObjectIdentifier? {
+    get { getAssociatedObject(forKey: "parent_store_id") }
+    set { setAssociatedObject(newValue, forKey: "parent_store_id") }
   }
 }

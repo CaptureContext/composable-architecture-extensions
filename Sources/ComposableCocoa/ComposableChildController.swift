@@ -36,7 +36,7 @@ where Controller.State: Equatable {
     if let store = store {
       localSubscriptions = []
       store
-        .ifLet(
+        ._ifLet(
           then: { [weak self] store in
             self?.setStore(store)
           },
