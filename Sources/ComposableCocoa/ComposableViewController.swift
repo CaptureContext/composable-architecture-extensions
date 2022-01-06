@@ -14,10 +14,17 @@ open class ComposableViewController<
 >: CustomCocoaViewController, ComposableViewControllerProtocol {
   public let core: ComposableCore<State, Action> = .init()
   
+  open override func viewDidLoad() {
+    super.viewDidLoad()
+    self.configure()
+  }
+  
   open override func _init() {
     super._init()
     self.__setupCore()
   }
+  
+  open func configure() {}
   
   open func scope(
     _ store: Core.Store?
