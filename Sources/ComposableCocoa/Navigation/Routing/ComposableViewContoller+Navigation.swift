@@ -143,17 +143,17 @@ where
   State.Route: ExpressibleByNilLiteral
 {
   public func configureRoutes(
-    for publisher: StorePublisher<State.Route>,
+    for publisher: StorePublisher<State.Route.Tag>,
     _ configurations: [RouteConfiguration<State.Route.Tag>],
     using action: @escaping (RoutingAction<State.Route>) -> Action
   ) -> Cancellable {
     publisher
       .receive(on: UIScheduler.shared)
-      .sink { [weak self] route in
+      .sink { [weak self] tag in
         guard let self = self else { return }
         configurations.forEach { configuration in
           self.navigate(
-            to: route.tag,
+            to: tag,
             using: configuration,
             action: action
           )
