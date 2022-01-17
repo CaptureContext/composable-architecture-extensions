@@ -6,12 +6,13 @@ open class ComposableObject<State: Equatable, Action>:
   ComposableObjectProtocol
 {
   public let core: ComposableCore<State, Action> = .init()
-  public var subscriptions: Set<AnyCancellable> = []
+  public var cancellables: Set<AnyCancellable> = []
 
   public override init() {
     super.init()
     self.__setupCore()
   }
+  
   open func scope(
     _ store: Core.Store?
   ) {}
@@ -28,6 +29,6 @@ open class ComposableObject<State: Equatable, Action>:
 
   open func bind(
     _ state: Core.StorePublisher,
-    into subscriptions: inout Core.Cancellables
+    into cancellables: inout Core.Cancellables
   ) {}
 }

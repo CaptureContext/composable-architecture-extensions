@@ -11,19 +11,19 @@ fileprivate extension Cancellable {
   }
 }
 
-extension ComposableViewController
-where
-  State: RoutableState,
-  State.Route: ExpressibleByNilLiteral
-{
-  private func navigate<Target: Equatable>(
-    to target: Target?,
+extension ComposableViewController {
+  private func navigate<
+    Target: Equatable & ExpressibleByNilLiteral,
+    Route: Equatable & ExpressibleByNilLiteral
+  >(
+    to target: Target,
     using configuration: RouteConfiguration<Target>,
-    action: @escaping (RoutingAction<State.Route>) -> Action
+    action: @escaping (RoutingAction<Route>) -> Action
   ) {
     guard let navigationController = self.navigationController else { return }
     let destination = configuration.target
-    if target.isNil, navigationController.visibleViewController !== self {
+    let nilTarget: Target = nil // silence Xcode bugged warning for target == nil
+    if target == nilTarget, navigationController.visibleViewController !== self {
       guard navigationController.viewControllers.contains(self) else {
         navigationController.popToRootViewController(animated: true)
         return
@@ -45,8 +45,8 @@ where
   }
   
   @discardableResult
-  public func configureDismiss(
-    action: @escaping (RoutingAction<State.Route>) -> Action
+  public func configureDismiss<Route: ExpressibleByNilLiteral>(
+    action: @escaping (RoutingAction<Route>) -> Action
   ) -> Cancellable {
     let localRoot = navigationController?.topViewController
     
@@ -111,15 +111,11 @@ where
   }
 }
 
-extension ComposableViewController
-where
-  State: RoutableState,
-  State.Route: ExpressibleByNilLiteral
-{
-  public func configureRoutes(
-    for publisher: StorePublisher<State.Route>,
-    _ configurations: [RouteConfiguration<State.Route>],
-    using action: @escaping (RoutingAction<State.Route>) -> Action
+extension ComposableViewController {
+  public func configureRoutes<Route: ExpressibleByNilLiteral>(
+    for publisher: StorePublisher<Route>,
+    _ configurations: [RouteConfiguration<Route>],
+    using action: @escaping (RoutingAction<Route>) -> Action
   ) -> Cancellable {
     publisher
       .receive(on: UIScheduler.shared)
@@ -136,17 +132,15 @@ where
   }
 }
 
-extension ComposableViewController
-where
-  State: RoutableState,
-  State.Route: Taggable,
-  State.Route: ExpressibleByNilLiteral
-{
-  public func configureRoutes(
-    for publisher: StorePublisher<State.Route.Tag>,
-    _ configurations: [RouteConfiguration<State.Route.Tag>],
-    using action: @escaping (RoutingAction<State.Route>) -> Action
-  ) -> Cancellable {
+extension ComposableViewController {
+  public func configureRoutes<
+    Route: Taggable & ExpressibleByNilLiteral
+  >(
+    for publisher: StorePublisher<Route.Tag>,
+    _ configurations: [RouteConfiguration<Route.Tag>],
+    using action: @escaping (RoutingAction<Route>) -> Action
+  ) -> Cancellable
+  where Route.Tag: ExpressibleByNilLiteral {
     publisher
       .receive(on: UIScheduler.shared)
       .sink { [weak self] tag in
