@@ -54,8 +54,13 @@ let package = Package(
       .upToNextMinor(from: "0.0.3")
     ),
     .package(
-      name: "swift-standard-extensions",
-      url: "https://github.com/capturecontext/swift-standard-extensions.git",
+      name: "swift-cocoa-extensions",
+      url: "https://github.com/capturecontext/swift-cocoa-extensions.git",
+      .branch("main")
+    ),
+    .package(
+      name: "swift-foundation-extensions",
+      url: "https://github.com/capturecontext/swift-foundation-extensions.git",
       .branch("main")
     )
   ],
@@ -71,7 +76,7 @@ let package = Package(
         ),
         .product(
           name: "CocoaExtensions",
-          package: "swift-standard-extensions"
+          package: "swift-cocoa-extensions"
         )
       ]
     ),
@@ -107,7 +112,7 @@ let package = Package(
         ),
         .product(
           name: "FoundationExtensions",
-          package: "swift-standard-extensions"
+          package: "swift-foundation-extensions"
         ),
         .product(
           name: "CombineExtensions",

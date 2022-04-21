@@ -189,7 +189,7 @@ extension ComposableCore {
     _ store: Store,
     removeDuplicates isDuplicate: @escaping (State, State) -> Bool
   ) {
-    guard self.store.isNil || not(equal(self.store?.parentStoreID, store.parentStoreID))
+    guard self.store.isNil || (self.store?.parentStoreID != store.parentStoreID)
     else { return }
     self.setStore(store, removeDuplicates: isDuplicate)
   }

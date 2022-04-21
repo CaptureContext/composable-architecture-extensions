@@ -12,26 +12,100 @@ fileprivate extension Cancellable {
 }
 
 extension ComposableViewController {
-  private func navigate<
-    Target: Equatable & ExpressibleByNilLiteral,
-    Route: Equatable & ExpressibleByNilLiteral
+  public func configureRoutes<Route: ExpressibleByNilLiteral>(
+    for publisher: StorePublisher<Route>,
+    _ configurations: [RouteConfiguration<Route>],
+    using action: @escaping (RoutingAction<Route>) -> Action
+  ) -> Cancellable {
+    self._configureRoutes(
+      for: publisher,
+      configurations,
+      dismissCancellable: Reference(
+        read: { [weak self] in
+          self?.core.cancellablesStorage[#function]
+        },
+        write: { [weak self] cancellable in
+          self?.core.cancellablesStorage[#function] = cancellable
+        }
+      ),
+      onDismiss: { [weak self] in
+        self?.core.send(action(.dismiss))
+      }
+    )
+  }
+}
+
+extension ComposableViewController {
+  public func configureRoutes<
+    Route: Taggable & ExpressibleByNilLiteral
   >(
-    to target: Target,
-    using configuration: RouteConfiguration<Target>,
-    action: @escaping (RoutingAction<Route>) -> Action
+    for publisher: StorePublisher<Route.Tag>,
+    _ configurations: [RouteConfiguration<Route.Tag>],
+    using action: @escaping (RoutingAction<Route>) -> Action
+  ) -> Cancellable where Route.Tag: ExpressibleByNilLiteral {
+    self._configureRoutes(
+      for: publisher,
+      configurations,
+      dismissCancellable: Reference(
+        read: { [weak self] in
+          self?.core.cancellablesStorage[#function]
+        },
+        write: { [weak self] cancellable in
+          self?.core.cancellablesStorage[#function] = cancellable
+        }
+      ),
+      onDismiss: { [weak self] in
+        self?.core.send(action(.dismiss))
+      }
+    )
+  }
+}
+
+extension CocoaViewController {
+  fileprivate func _configureRoutes<
+    P: Publisher,
+    Route: ExpressibleByNilLiteral & Equatable
+  >(
+    for publisher: P,
+    _ configurations: [RouteConfiguration<Route>],
+    dismissCancellable: Reference<Cancellable?>,
+    onDismiss: @escaping () -> Void
+  ) -> Cancellable where P.Output == Route, P.Failure == Never {
+    publisher
+      .removeDuplicates()
+      .receive(on: UIScheduler.shared)
+      .sink { [weak self] route in
+        guard let self = self else { return }
+        let configuration = configurations.first(where: { $0.target == route })
+        let destination = configuration.map { $0.getController }
+        self.navigate(
+          to: destination,
+          beforePush: {
+            self.configureNavigationDismiss(onDismiss)
+              .store(in: &dismissCancellable.wrappedValue)
+          }
+        )
+      }
+  }
+  
+  private func navigate(
+    to destination: (() -> CocoaViewController)?,
+    beforePush: () -> Void
   ) {
-    guard let navigationController = self.navigationController else { return }
-    let destination = configuration.target
-    let nilTarget: Target = nil // silence Xcode bugged warning for target == nil
-    if target == nilTarget, navigationController.visibleViewController !== self {
+    guard let navigationController = self.navigationController
+    else { return }
+    
+    let isDismiss = destination == nil
+      && navigationController.visibleViewController !== self
+    
+    if isDismiss {
       guard navigationController.viewControllers.contains(self) else {
         navigationController.popToRootViewController(animated: true)
         return
       }
       navigationController.popToViewController(self, animated: true)
-    } else if target == destination {
-      let controller = configuration.getController()
-      controller.setAssociatedObject(true, forKey: "composable_controller.is_configured_route")
+    } else if let destination = destination {
+      let controller = destination()
       
       if navigationController.viewControllers.contains(self) {
         if navigationController.viewControllers.last !== self {
@@ -39,14 +113,13 @@ extension ComposableViewController {
         }
       }
       
-      configureDismiss(action: action)
+      beforePush()
       navigationController.pushViewController(controller, animated: true)
     }
   }
   
-  @discardableResult
-  public func configureDismiss<Route: ExpressibleByNilLiteral>(
-    action: @escaping (RoutingAction<Route>) -> Action
+  private func configureNavigationDismiss(
+    _ action: @escaping () -> Void
   ) -> Cancellable {
     let localRoot = navigationController?.topViewController
     
@@ -61,12 +134,10 @@ extension ComposableViewController {
         else { return }
         if let coordinator = self.navigationController?.transitionCoordinator {
           coordinator.animate(alongsideTransition: nil) { context in
-            if !context.isCancelled {
-              self.core.send(action(.dismiss))
-            }
+            if !context.isCancelled { action() }
           }
         } else {
-          self.core.send(action(.dismiss))
+          action()
         }
       }
     
@@ -81,21 +152,17 @@ extension ComposableViewController {
         else { return }
         if let coordinator = self.navigationController?.transitionCoordinator {
           coordinator.animate(alongsideTransition: nil) { context in
-            if !context.isCancelled {
-              self.core.send(action(.dismiss))
-            }
+            if !context.isCancelled { action() }
           }
         } else {
-          self.core.send(action(.dismiss))
+          action()
         }
       }
     
     let third = navigationController?
       .publisher(for: #selector(UINavigationController.popToRootViewController))
       .receive(on: UIScheduler.shared)
-      .sink { [weak self] in
-        self?.core.send(action(.dismiss))
-      }
+      .sink { action() }
     
     let cancellable = AnyCancellable {
       first?.cancel()
@@ -103,56 +170,7 @@ extension ComposableViewController {
       third?.cancel()
     }
     
-    cancellable.store(
-      in: &self.core.cancellablesStorage[#function]
-    )
-    
     return cancellable
-  }
-}
-
-extension ComposableViewController {
-  public func configureRoutes<Route: ExpressibleByNilLiteral>(
-    for publisher: StorePublisher<Route>,
-    _ configurations: [RouteConfiguration<Route>],
-    using action: @escaping (RoutingAction<Route>) -> Action
-  ) -> Cancellable {
-    publisher
-      .receive(on: UIScheduler.shared)
-      .sink { [weak self] route in
-        guard let self = self else { return }
-        configurations.forEach { configuration in
-          self.navigate(
-            to: route,
-            using: configuration,
-            action: action
-          )
-        }
-      }
-  }
-}
-
-extension ComposableViewController {
-  public func configureRoutes<
-    Route: Taggable & ExpressibleByNilLiteral
-  >(
-    for publisher: StorePublisher<Route.Tag>,
-    _ configurations: [RouteConfiguration<Route.Tag>],
-    using action: @escaping (RoutingAction<Route>) -> Action
-  ) -> Cancellable
-  where Route.Tag: ExpressibleByNilLiteral {
-    publisher
-      .receive(on: UIScheduler.shared)
-      .sink { [weak self] tag in
-        guard let self = self else { return }
-        configurations.forEach { configuration in
-          self.navigate(
-            to: tag,
-            using: configuration,
-            action: action
-          )
-        }
-      }
   }
 }
 
@@ -173,4 +191,5 @@ public struct RouteConfiguration<Target: Hashable> {
   var getController: () -> CocoaViewController
   var target: Target
 }
+
 #endif

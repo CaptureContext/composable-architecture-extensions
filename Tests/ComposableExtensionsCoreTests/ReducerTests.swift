@@ -1,11 +1,6 @@
 import ComposableExtensionsCore
 import XCTest
-import Prelude
 import FoundationExtensions
-
-extension Function where Input == Void, Output == Void {
-  func run() { callAsFunction() }
-}
 
 final class ReducerTests: XCTestCase {
   func testOnChange() {
@@ -130,7 +125,7 @@ final class ReducerTests: XCTestCase {
         
       case let .child(index, action):
         return reducer.run(&state.children[index], action, environment)
-          .map(curry(Action.child)(index))
+          .map { .child(at: index, $0) }
         
       case .addChild:
         state.children.append(Node())
@@ -215,7 +210,7 @@ final class ReducerTests: XCTestCase {
     
     enum Reducers { // simulate global scope
       static func getOptionalReducer1() -> Reducer<State1?, Action1, Void> {
-        return reducer1.optional(breakpointOnNil: false)
+        return reducer1.optional()
       }
       
       static let reducer1 = Reducer<State1, Action1, Void>.combine(
@@ -283,31 +278,31 @@ final class ReducerTests: XCTestCase {
       state.value = 1
     }
   
-    Func {
+    do {
       let _state2 = State2()
       store.send(.pushState2(_state2)) { state in
         state.state2 = _state2
       }
-    }.run()
+    }
     
     store.send(.action2(.setFlag(true))) { state in
       state.state2?.flag = true
     }
     
-    Func {
+    do {
       let _state1 = State1()
       store.send(.action2(.pushState1(_state1))) { state in
         state.state2?.state1 = _state1
       }
-    }.run()
+    }
     
     
-    Func {
+    do {
       let _state2 = State2()
       store.send(.action2(.action1(.pushState2(_state2)))) { state in
         state.state2?.state1?.state2 = _state2
       }
-    }.run()
+    }
     
     store.send(.action2(.popState1)) { state in
       state.state2?.state1 = nil

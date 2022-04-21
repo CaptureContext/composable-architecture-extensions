@@ -20,7 +20,7 @@ extension Reducer where State: RoutableState, Action == State.RoutingAction {
       .pullback(
         state: \.currentRoute,
         action: /.self,
-        environment: const(())
+        environment: { _ in }
       )
   }
 }
@@ -36,7 +36,7 @@ extension Reducer {
         .pullback(
           state: toLocalState,
           action: toLocalAction,
-          environment: const(())
+          environment: { _ in }
         )
     )
   }
