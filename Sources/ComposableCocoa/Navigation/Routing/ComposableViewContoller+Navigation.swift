@@ -184,7 +184,19 @@ public struct RouteConfiguration<Target: Hashable> {
     for childController: ComposableChildController<Controller>,
     target: Target
   ) {
-    self.getController = childController.initIfNeeded
+    self.init(for: childController.initIfNeeded, target: target)
+  }
+  
+  public static func associate(
+    _ controller: @escaping () -> CocoaViewController,
+    with target: Target
+  ) -> RouteConfiguration { .init(for: controller, target: target) }
+  
+  public init(
+    for controller: @escaping () -> CocoaViewController,
+    target: Target
+  ) {
+    self.getController = controller
     self.target = target
   }
   
