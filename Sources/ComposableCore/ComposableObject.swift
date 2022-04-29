@@ -6,7 +6,6 @@ open class ComposableObject<State: Equatable, Action>:
   ComposableObjectProtocol
 {
   public let core: ComposableCore<State, Action> = .init()
-  public var cancellables: Set<AnyCancellable> = []
 
   public override init() {
     super.init()

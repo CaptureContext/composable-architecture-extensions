@@ -72,8 +72,8 @@ extension ComposableObjectProtocol {
       self?.storeWasSet(from: old, to: new)
     }
 
-    core.onBind { [weak self] state, subscriptions in
-      self?.bind(state, into: &subscriptions)
+    core.onBind { [weak self] state, cancellables in
+      self?.bind(state, into: &cancellables)
     }
   }
 }
