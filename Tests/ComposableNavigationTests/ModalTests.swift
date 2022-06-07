@@ -114,10 +114,7 @@ final class ModalTests: XCTestCase {
       RootState,
       RootAction,
       Void
-    > = derivedReducer.modal(
-      initialDerivedState,
-      breakpointOnNil: false
-    ).pullback(
+    > = derivedReducer.modal(initialDerivedState).pullback(
       state: \RootState.derived,
       action: /RootAction.derived,
       environment: { _ in }
@@ -191,10 +188,7 @@ final class ModalTests: XCTestCase {
       RootState,
       RootAction,
       Void
-    > = derivedReducer.modal(
-      initialDerivedState,
-      breakpointOnNil: false
-    )
+    > = derivedReducer.modal(initialDerivedState)
     .dismissOn(.close)
     .pullback(
       state: \RootState.derived,

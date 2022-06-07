@@ -144,7 +144,7 @@ final class NavigationTests: XCTestCase {
       RootState,
       RootAction,
       Void
-    > = derivedReducer.optional(breakpointOnNil: false).pullback(
+    > = derivedReducer.optional().pullback(
       state: \RootState.derived,
       action: /RootAction.derived,
       environment: { _ in }
@@ -243,7 +243,7 @@ final class NavigationTests: XCTestCase {
       RootState,
       RootAction,
       Void
-    > = derivedReducer.optional(breakpointOnNil: false).pullback(
+    > = derivedReducer.optional().pullback(
       state: \RootState.derived,
       action: /RootAction.derived,
       environment: { _ in }

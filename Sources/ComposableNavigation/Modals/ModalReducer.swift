@@ -19,7 +19,6 @@ extension Reducer {
   
   public func modal(
     _ staticStateForPresent: State,
-    breakpointOnNil: Bool = true,
     file: StaticString = #fileID,
     line: UInt = #line
   ) -> Reducer<
@@ -29,7 +28,6 @@ extension Reducer {
   > {
     .combine(
       self.optional(
-        breakpointOnNil: breakpointOnNil,
         file: file,
         line: line
       ).pullback(
