@@ -45,8 +45,8 @@ let package = Package(
     ),
     .package(
       name: "swift-composable-environment",
-      url: "https://github.com/tgrapperon/swift-composable-environment.git",
-      .upToNextMinor(from: "0.5.1")
+      url: "https://github.com/capturecontext/swift-composable-environment.git",
+      .upToNextMinor(from: "0.0.1")
     ),
     .package(
       name: "combine-extensions",
