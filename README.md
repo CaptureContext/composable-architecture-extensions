@@ -3,6 +3,8 @@
 [![SwiftPM 5.3](https://img.shields.io/badge/swiftpm-5.3-ED523F.svg?style=flat)](https://swift.org/download/) ![Platforms](https://img.shields.io/badge/Platforms-iOS_13_|_macOS_10.15_|_Catalyst_|_tvOS_14_|_watchOS_7-ED523F.svg?style=flat) [![@maximkrouk](https://img.shields.io/badge/contact-@capturecontext-1DA1F2.svg?style=flat&logo=twitter)](https://twitter.com/capture_context) 
 
 > NOTE: The package is early beta (feel free suggest your improvements [here](https://github.com/capturecontext/composable-architecture-extensions/discussions/1))
+>
+> Old main is on `deprecated/main` branch now
 
 ### Basic
 
