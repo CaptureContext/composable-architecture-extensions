@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import Combine
+import Foundation
 
 open class ComposableObject<State: Equatable, Action>:
   NSObject,

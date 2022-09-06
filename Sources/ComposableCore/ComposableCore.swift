@@ -150,9 +150,10 @@ public final class ComposableCore<State, Action>: ComposableCoreProtocol {
   
   // MARK: - Send
 
-  public func send(_ action: Action) {
-    guard let viewStore = viewStore else { return }
-    viewStore.send(action)
+  @discardableResult
+  public func send(_ action: Action) -> ViewStoreTask? {
+    guard let viewStore = viewStore else { return nil }
+    return viewStore.send(action)
   }
 
   public func sendAsync(
@@ -165,8 +166,13 @@ public final class ComposableCore<State, Action>: ComposableCoreProtocol {
   }
 
   #if canImport(SwiftUI)
-  public func send(_ action: Action, animation: Animation?) {
-    viewStore.map { $0.send(action, animation: animation) }
+  @discardableResult
+  public func send(
+    _ action: Action,
+    animation: Animation?
+  ) -> ViewStoreTask? {
+    guard let viewStore else { return nil }
+    return viewStore.send(action, animation: animation)
   }
   #endif
 }

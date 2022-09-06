@@ -1,4 +1,4 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.6
 
 import PackageDescription
 
@@ -39,29 +39,28 @@ let package = Package(
   ],
   dependencies: [
     .package(
-      name: "swift-composable-architecture",
       url: "https://github.com/pointfreeco/swift-composable-architecture.git",
-      .upToNextMajor(from: "0.31.0")
+      .upToNextMajor(from: "0.39.1")
     ),
     .package(
-      name: "swift-composable-environment",
       url: "https://github.com/capturecontext/swift-composable-environment.git",
       .upToNextMinor(from: "0.0.1")
     ),
     .package(
-      name: "combine-extensions",
       url: "https://github.com/capturecontext/combine-extensions.git",
       .upToNextMinor(from: "0.0.3")
     ),
     .package(
-      name: "swift-cocoa-extensions",
-      url: "https://github.com/capturecontext/swift-cocoa-extensions.git",
-      .branch("main")
+      url: "https://github.com/capturecontext/combine-cocoa-navigation.git",
+      branch: "main"
     ),
     .package(
-      name: "swift-foundation-extensions",
+      url: "https://github.com/capturecontext/swift-cocoa-extensions.git",
+      branch: "main"
+    ),
+    .package(
       url: "https://github.com/capturecontext/swift-foundation-extensions.git",
-      .branch("main")
+      branch: "main"
     )
   ],
   targets: [ // MARK: - Targets
@@ -77,7 +76,11 @@ let package = Package(
         .product(
           name: "CocoaExtensions",
           package: "swift-cocoa-extensions"
-        )
+        ),
+        .product(
+          name: "CombineNavigation",
+          package: "combine-cocoa-navigation"
+        ),
       ]
     ),
     .target(
