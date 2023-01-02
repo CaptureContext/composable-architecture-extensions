@@ -20,6 +20,7 @@ extension CasePath {
   ///   }
   /// }
   /// ```
+  @inlinable
   public func ifCaseLetEmbed(_ value: Value?, in root: inout Root) {
     guard extract(from: root) != nil, let value = value else { return }
     root = embed(value)
@@ -29,16 +30,20 @@ extension CasePath {
 // MARK: CasePathValueDetector
 
 public struct CaseMarker<Root> {
-  private let _matches: (Root) -> Bool
-  
+  @usableFromInline
+  let _matches: (Root) -> Bool
+
+  @inlinable
   public func matches(_ value: Root) -> Bool {
     _matches(value)
   }
-  
+
+  @inlinable
   public init(matches: @escaping (Root) -> Bool) {
     self._matches = matches
   }
-  
+
+  @inlinable
   public init<Value>(
     for casePath: CasePath<Root, Value>
   ) {
@@ -52,6 +57,7 @@ public struct CaseMarker<Root> {
 ///   values. Its behavior is otherwise undefined.
 /// - Parameter embed: An embed function.
 /// - Returns: A case path.
+@inlinable
 public prefix func / <Root, Value>(
   embed: @escaping (Value) -> Root
 ) -> CaseMarker<Root> {
@@ -64,6 +70,7 @@ public prefix func / <Root, Value>(
 ///   values. Its behavior is otherwise undefined.
 /// - Parameter embed: An embed function.
 /// - Returns: A case path.
+@inlinable
 public prefix func / <Root>(
   case: Root
 ) -> CaseMarker<Root> {

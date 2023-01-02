@@ -4,6 +4,7 @@ public protocol Taggable: Hashable {
 }
 
 extension Taggable {
+  @inlinable
   public func hash(into hasher: inout Hasher) {
     hasher.combine(tag)
   }
@@ -11,6 +12,8 @@ extension Taggable {
 
 extension Optional: Taggable where Wrapped: Taggable {
   public typealias Tag = Optional<Wrapped.Tag>
+
+  @inlinable
   public var tag: Tag { self?.tag }
 }
 
@@ -25,6 +28,7 @@ public struct Tagged<Tag, Value: Equatable>: Taggable, Hashable where Tag: Hasha
   /// - Parameters:
   ///   - value: A value.
   ///   - id: A hashable identifier.
+  @inlinable
   public init(_ value: Value, tag: Tag) {
     self.tag = tag
     self.value = value
@@ -40,6 +44,7 @@ public struct Tagged<Tag, Value: Equatable>: Taggable, Hashable where Tag: Hasha
   /// - Parameters:
   ///   - value: A value.
   ///   - id: A hashable identifier.
+  @inlinable
   public init(_ value: Value, tag: (Value) -> Tag) {
     self.init(value, tag: tag(value))
   }
@@ -55,10 +60,12 @@ public struct Tagged<Tag, Value: Equatable>: Taggable, Hashable where Tag: Hasha
   /// - Parameters:
   ///   - value: A value.
   ///   - id: A key path from the value to a hashable identifier.
+  @inlinable
   public init(_ value: Value, tag: KeyPath<Value, Tag>) {
     self.init(value, tag: value[keyPath: tag])
   }
-  
+
+  @inlinable
   public subscript<LocalValue>(
     dynamicMember keyPath: WritableKeyPath<Value, LocalValue>
   ) -> LocalValue {
@@ -68,6 +75,7 @@ public struct Tagged<Tag, Value: Equatable>: Taggable, Hashable where Tag: Hasha
 }
 
 extension Tagged where Value: Taggable, Value.Tag == Tag {
+  @inlinable
   public init(_ value: Value) {
     self.init(value, tag: value.tag)
   }

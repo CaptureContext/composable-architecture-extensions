@@ -8,7 +8,6 @@
 
 import CombineExtensions
 import ComposableArchitecture
-import StoreSchedulers
 import FoundationExtensions
 
 #if canImport(SwiftUI)
@@ -25,67 +24,91 @@ public final class ComposableCore<State, Action>: ComposableCoreProtocol {
   public typealias Cancellables = Set<AnyCancellable>
 
   // MARK: - Properties
-  
+  @usableFromInline
+  var _store: Store?
+
+  @usableFromInline
+  var _viewStore: ViewStore?
+
+  @inlinable
+  public var store: Store? { _store }
+
+  @inlinable
+  public var viewStore: ViewStore? { _viewStore }
+
   public var state: State? { viewStore?.state }
-  private(set) public var store: Store?
-  private(set) public var viewStore: ViewStore?
   
   /// Cancellable for optional state stores
-  private var storeCancellables: Cancellables = []
+  @usableFromInline
+  var storeCancellables: Cancellables = []
   
   /// Cancellables for binded state
-  private var stateCancellables: Cancellables = []
+  @usableFromInline
+  var stateCancellables: Cancellables = []
   
   /// You can store any cancellables here
   ///
   /// It's a convenient helper and not used by the Core internally
   public var cancellablesStorage: [AnyHashable: Cancellable] = [:]
-  
-  private let lock = NSLock()
-  
-  // MARK: - Handlers
 
-  private var _bind: ((StorePublisher, inout Cancellables) -> Void)?
+  @usableFromInline
+  let lock = NSLock()
+  
+  // MARK: - Stored Handlers
+
+  @usableFromInline
+  var _bind: ((StorePublisher, inout Cancellables) -> Void)?
+
+  @usableFromInline
+  var _scope: ((Store?) -> Void)?
+
+  @usableFromInline
+  var _storeWillSet: ((Store?, Store?) -> Void)?
+
+  @usableFromInline
+  var _storeDidSet: ((Store?, Store?) -> Void)?
+
+  @inlinable
+  public init() {}
+
+
 
   /// Handler for state rebinding on the `setStore` method call
   ///
   /// NOTE: ComposableObjectProtocol relies on that property
+  @inlinable
   public func onBind(perform action: ((StorePublisher, inout Cancellables) -> Void)?) {
     self._bind = action
   }
-
-  private var _scope: ((Store?) -> Void)?
   
   /// Handler for scoping the store to derived stores on the `setStore` method call
   ///
   /// NOTE: ComposableObjectProtocol relies on that property
+  @inlinable
   public func onScope(perform action: ((Store?) -> Void)?) {
     self._scope = action
   }
-
-  private var _storeWillSet: ((Store?, Store?) -> Void)?
   
   /// Handler for the `setStore` method
   ///
   /// NOTE: ComposableObjectProtocol relies on that property
+  @inlinable
   public func onStoreWillSet(perform action: ((Store?, Store?) -> Void)?) {
     self._storeWillSet = action
   }
-
-  private var _storeDidSet: ((Store?, Store?) -> Void)?
   
   /// Handler for the `setStore` method completion
   ///
   /// NOTE: ComposableObjectProtocol relies on that property
+  @inlinable
   public func onStoreDidSet(perform action: ((Store?, Store?) -> Void)?) {
     self._storeDidSet = action
   }
-
-  public init() {}
   
   // MARK: - Set store
 
   /// Sets a new store with an optional state
+  @inlinable
   public func setStore(
     _ store: ComposableArchitecture.Store<State?, Action>?
   ) where State: Equatable {
@@ -93,6 +116,7 @@ public final class ComposableCore<State, Action>: ComposableCoreProtocol {
   }
 
   /// Sets a new store with an optional state
+  @inlinable
   public func setStore(
     _ store: ComposableArchitecture.Store<State?, Action>?,
     removeDuplicates isDuplicate: @escaping (State, State) -> Bool
@@ -111,6 +135,7 @@ public final class ComposableCore<State, Action>: ComposableCoreProtocol {
   }
 
   /// Sets a new store
+  @inlinable
   public func setStore(
     _ store: ComposableArchitecture.Store<State, Action>?
   ) where State: Equatable {
@@ -118,6 +143,7 @@ public final class ComposableCore<State, Action>: ComposableCoreProtocol {
   }
 
   /// Sets a new store
+  @inlinable
   public func setStore(
     _ store: Store?,
     removeDuplicates isDuplicate: @escaping (State, State) -> Bool
@@ -125,8 +151,8 @@ public final class ComposableCore<State, Action>: ComposableCoreProtocol {
     storeCancellables.removeAll()
     let oldStore = self.store
     self._storeWillSet?(oldStore, store)
-    self.store = store
-    self.viewStore = store.map { store in
+    self._store = store
+    self._viewStore = store.map { store in
       ViewStore(store, removeDuplicates: isDuplicate)
     }
 
@@ -135,10 +161,12 @@ public final class ComposableCore<State, Action>: ComposableCoreProtocol {
     self._storeDidSet?(oldStore, store)
   }
 
+  @inlinable
   public func releaseStore() {
     setStore(Store?.none, removeDuplicates: { _, _ in false })
   }
 
+  @inlinable
   public func subscribeToStateChanges() {
     lock.lock()
     stateCancellables.removeAll()
@@ -151,22 +179,15 @@ public final class ComposableCore<State, Action>: ComposableCoreProtocol {
   // MARK: - Send
 
   @discardableResult
+  @inlinable
   public func send(_ action: Action) -> ViewStoreTask? {
     guard let viewStore = viewStore else { return nil }
     return viewStore.send(action)
   }
 
-  public func sendAsync(
-    _ action: Action,
-    on scheduler: NoOptionsSchedulerOf<DispatchQueue> = .eventHandling
-  ) {
-    scheduler.schedule { [weak self] in
-      self?.send(action)
-    }
-  }
-
   #if canImport(SwiftUI)
   @discardableResult
+  @inlinable
   public func send(
     _ action: Action,
     animation: Animation?
@@ -179,6 +200,7 @@ public final class ComposableCore<State, Action>: ComposableCoreProtocol {
 
 extension ComposableCore {
   /// Sets a new store only if the old one was nil or parents are different
+  @inlinable
   public func setStoreIfNeeded(
     _ store: ComposableArchitecture.Store<State?, Action>
   ) where State: Equatable {
@@ -186,6 +208,7 @@ extension ComposableCore {
   }
   
   /// Sets a new store only if the old one was nil or parents are different
+  @inlinable
   public func setStoreIfNeeded(
     _ store: ComposableArchitecture.Store<State?, Action>,
     removeDuplicates isDuplicate: @escaping (State, State) -> Bool
@@ -202,6 +225,7 @@ extension ComposableCore {
   }
   
   /// Sets a new store only if the old one was nil or parents are different
+  @inlinable
   public func setStoreIfNeeded(
     _ store: ComposableArchitecture.Store<State, Action>
   ) where State: Equatable {
@@ -209,6 +233,7 @@ extension ComposableCore {
   }
 
   /// Sets a new store only if the old one was nil or parents are different
+  @inlinable
   public func setStoreIfNeeded(
     _ store: Store,
     removeDuplicates isDuplicate: @escaping (State, State) -> Bool
@@ -221,6 +246,7 @@ extension ComposableCore {
 
 extension Store: AssociatingObject {
   /// `.scope` implementation that tracks store's parent
+  @inlinable
   public func _scope<LocalState, LocalAction>(
     state: @escaping (State) -> LocalState,
     action: @escaping (LocalAction) -> Action
@@ -231,6 +257,7 @@ extension Store: AssociatingObject {
   }
   
   /// `.ifLet` implementation that tracks store's parent
+  @inlinable
   public func _ifLet<Wrapped>(
     then unwrap: @escaping (Store<Wrapped, Action>) -> Void,
     else: @escaping () -> Void = {}
@@ -244,7 +271,8 @@ extension Store: AssociatingObject {
       else: `else`
     )
   }
-  
+
+  @inlinable
   public var parentStoreID: ObjectIdentifier? {
     get { getAssociatedObject(forKey: "parent_store_id") }
     set { setAssociatedObject(newValue, forKey: "parent_store_id") }

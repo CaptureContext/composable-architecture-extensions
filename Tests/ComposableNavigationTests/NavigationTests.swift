@@ -1,62 +1,63 @@
 import ComposableArchitecture
 import ComposableNavigation
 import XCTest
+import CasePaths
 
 final class NavigationTests: XCTestCase {
   func testStored() {
-    struct RootState: RoutableState, Equatable {
-      var derived: DerivedState = .init()
-      var currentRoute: RootRoute? = .none
-    }
-    
-    enum RootRoute: Hashable {
-      case derived
-    }
-    
-    enum RootAction: RouterAction, Equatable {
-      case derived(DerivedAction)
-      case router(RoutingAction<RootRoute?>)
-    }
-    
-    struct DerivedState: Equatable {
-      var value: Int = 0
-    }
-    
-    enum DerivedAction: Equatable {
-      case increment, decrement
-    }
-    
-    
-    let derivedReducer = Reducer<
-      DerivedState,
-      DerivedAction,
-      Void
-    > { state, action, environment in
-      switch action {
-      case .increment:
-        state.value += 1
-        return .none
-        
-      case .decrement:
-        state.value -= 1
-        return .none
+    struct DerivedFeature: ReducerProtocol {
+      struct State: Equatable {
+        var value: Int = 0
+      }
+      
+      enum Action: Equatable {
+        case increment, decrement
+      }
+      
+      func reduce(
+        into state: inout State,
+        action: Action
+      ) -> EffectTask<Action> {
+        switch action {
+        case .increment:
+          state.value += 1
+          return .none
+          
+        case .decrement:
+          state.value -= 1
+          return .none
+        }
       }
     }
     
-    let rootReducer: Reducer<
-      RootState,
-      RootAction,
-      Void
-    > = derivedReducer.pullback(
-      state: \RootState.derived,
-      action: /RootAction.derived,
-      environment: { _ in }
-    ).routing()
+    struct RootFeature: ReducerProtocol {
+      struct State: RoutableState, Equatable {
+        var derived: DerivedFeature.State = .init()
+        var currentRoute: Route? = .none
+      }
+      
+      enum Route: Hashable {
+        case derived
+      }
+      
+      enum Action: RoutableAction, Equatable {
+        case derived(DerivedFeature.Action)
+        case router(RoutingAction<Route?>)
+      }
+      
+      var body: some ReducerProtocol<State, Action> {
+        Scope(
+          state: \State.derived,
+          action: /Action.derived,
+          DerivedFeature.init
+        )
+        .routing()
+      }
+    }
     
     let store = TestStore(
-      initialState: RootState(),
-      reducer: rootReducer,
-      environment: ()
+      initialState: .init(),
+      reducer: RootFeature()
     )
     
     store.send(.navigate(to: .derived)) { state in
@@ -77,86 +78,78 @@ final class NavigationTests: XCTestCase {
   }
   
   func testExclucive() {
-    struct RootState: RoutableState, Equatable {
-      var currentRoute: RootRoute?
-      
-      var derived: DerivedState? {
-        get {
-          guard case let .derived(state) = currentRoute
-          else { return .none }
-          return state
-        }
-        set {
-          guard
-            let state = newValue,
-            case .derived = currentRoute
-          else { return }
-          currentRoute = .derived(state)
-        }
-      }
-    }
-    
-    enum RootRoute: Equatable, Taggable {
-      case derived(DerivedState)
-      
-      var tag: Tag {
-        switch self {
-        case .derived:
-          return .derived
-        }
+    struct DerivedFeature: ReducerProtocol {
+      struct State: Equatable {
+        var value: Int = 0
       }
       
-      enum Tag: Hashable {
-        case derived
+      enum Action: Equatable {
+        case increment, decrement
+      }
+      
+      func reduce(
+        into state: inout State,
+        action: Action
+      ) -> EffectTask<Action> {
+        switch action {
+        case .increment:
+          state.value += 1
+          return .none
+          
+        case .decrement:
+          state.value -= 1
+          return .none
+        }
       }
     }
     
-    enum RootAction: RouterAction, Equatable {
-      case derived(DerivedAction)
-      case router(RoutingAction<RootRoute?>)
-    }
-    
-    struct DerivedState: Equatable {
-      var value: Int = 0
-    }
-    
-    enum DerivedAction: Equatable {
-      case increment, decrement
-    }
-    
-    let derivedReducer = Reducer<
-      DerivedState,
-      DerivedAction,
-      Void
-    > { state, action, environment in
-      switch action {
-      case .increment:
-        state.value += 1
-        return .none
+    struct RootFeature: ReducerProtocol {
+      struct State: RoutableState, Equatable {
+        var currentRoute: Route?
         
-      case .decrement:
-        state.value -= 1
-        return .none
+        var derived: DerivedFeature.State? {
+          get { (/RootFeature.Route.derived).extract(from: currentRoute) }
+          set { (/RootFeature.Route.derived).ifCaseLetEmbed(newValue, in: &currentRoute) }
+        }
+      }
+      
+      enum Route: Equatable, Taggable {
+        case derived(DerivedFeature.State)
+        
+        var tag: Tag {
+          switch self {
+          case .derived:
+            return .derived
+          }
+        }
+        
+        enum Tag: Hashable {
+          case derived
+        }
+      }
+      
+      enum Action: RoutableAction, Equatable {
+        case derived(DerivedFeature.Action)
+        case router(RoutingAction<Route?>)
+      }
+      
+      var body: some ReducerProtocol<State, Action> {
+        Scope(
+          state: \State.derived,
+          action: /Action.derived
+        ) {
+          DerivedFeature().optional()
+        }
+        .routing()
       }
     }
-    
-    let rootReducer: Reducer<
-      RootState,
-      RootAction,
-      Void
-    > = derivedReducer.optional().pullback(
-      state: \RootState.derived,
-      action: /RootAction.derived,
-      environment: { _ in }
-    ).routing()
     
     let store = TestStore(
-      initialState: RootState(),
-      reducer: rootReducer,
-      environment: ()
+      initialState: .init(),
+      reducer: RootFeature()
     )
     
-    let firstNavigation = DerivedState()
+    let firstNavigation = DerivedFeature.State()
     store.send(.navigate(to: .derived(firstNavigation))) { state in
       state.currentRoute = .derived(firstNavigation)
     }
@@ -168,96 +161,93 @@ final class NavigationTests: XCTestCase {
     store.send(.router(.dismiss)) { state in
       state.currentRoute = nil
     }
-    
-    store.send(.derived(.decrement))
+
+    // Pointfree removed "disable nil warnings" feature
+    // from ifLet/scope stores etc. so there is no way
+    // to allow you to don't care about redundant actions 😢
+    // Maybe we'll add a workaround later, or just stick
+    // with the main approach... (to be discussed)
+
+    // store.send(.derived(.decrement))
   }
   
   func testDismissOn() {
-    struct RootState: RoutableState, Equatable {
-      var currentRoute: RootRoute?
-      
-      var derived: DerivedState? {
-        get {
-          guard case let .derived(state) = currentRoute
-          else { return .none }
-          return state
-        }
-        set {
-          guard
-            let state = newValue,
-            case .derived = currentRoute
-          else { return }
-          currentRoute = .derived(state)
-        }
-      }
-    }
-    
-    enum RootRoute: Equatable, Taggable {
-      case derived(DerivedState)
-      
-      var tag: Tag {
-        switch self {
-        case .derived:
-          return .derived
-        }
+    struct DerivedFeature: ReducerProtocol {
+      struct State: Equatable {
+        var value: Int = 0
       }
       
-      enum Tag: Hashable {
-        case derived
+      enum Action: Equatable {
+        case increment, decrement, close
+      }
+      
+      func reduce(
+        into state: inout State,
+        action: Action
+      ) -> EffectTask<Action> {
+        switch action {
+        case .increment:
+          state.value += 1
+          return .none
+          
+        case .decrement:
+          state.value -= 1
+          return .none
+          
+        default:
+          return .none
+        }
       }
     }
     
-    enum RootAction: RouterAction, Equatable {
-      case derived(DerivedAction)
-      case router(RoutingAction<RootRoute?>)
-    }
-    
-    struct DerivedState: Equatable {
-      var value: Int = 0
-    }
-    
-    enum DerivedAction: Equatable {
-      case increment, decrement, close
-    }
-    
-    let derivedReducer = Reducer<
-      DerivedState,
-      DerivedAction,
-      Void
-    > { state, action, environment in
-      switch action {
-      case .increment:
-        state.value += 1
-        return .none
+    struct RootFeature: ReducerProtocol {
+      struct State: RoutableState, Equatable {
+        var currentRoute: Route?
         
-      case .decrement:
-        state.value -= 1
-        return .none
+        var derived: DerivedFeature.State? {
+          get { (/RootFeature.Route.derived).extract(from: currentRoute) }
+          set { (/RootFeature.Route.derived).ifCaseLetEmbed(newValue, in: &currentRoute) }
+        }
+      }
+      
+      enum Route: Equatable, Taggable {
+        case derived(DerivedFeature.State)
         
-      default:
-        return .none
+        var tag: Tag {
+          switch self {
+          case .derived:
+            return .derived
+          }
+        }
+        
+        enum Tag: Hashable {
+          case derived
+        }
+      }
+      
+      enum Action: RoutableAction, Equatable {
+        case derived(DerivedFeature.Action)
+        case router(RoutingAction<Route?>)
+      }
+      
+      var body: some ReducerProtocol<State, Action> {
+        Scope(
+          state: \State.derived,
+          action: /Action.derived
+        ) {
+          DerivedFeature().optional()
+        }
+        .dismissOn(.derived(.close))
+        .routing()
       }
     }
-    
-    let rootReducer: Reducer<
-      RootState,
-      RootAction,
-      Void
-    > = derivedReducer.optional().pullback(
-      state: \RootState.derived,
-      action: /RootAction.derived,
-      environment: { _ in }
-    )
-    .dismissOn(.derived(.close))
-    .routing()
     
     let store = TestStore(
-      initialState: RootState(),
-      reducer: rootReducer,
-      environment: ()
+      initialState: .init(),
+      reducer: RootFeature()
     )
     
-    let firstNavigation = DerivedState()
+    let firstNavigation = DerivedFeature.State()
     store.send(.navigate(to: .derived(firstNavigation))) { state in
       state.currentRoute = .derived(firstNavigation)
     }
@@ -270,7 +260,13 @@ final class NavigationTests: XCTestCase {
     store.receive(.router(.dismiss)) { state in
       state.currentRoute = nil
     }
-    
-    store.send(.derived(.decrement))
+
+    // Pointfree removed "disable nil warnings" feature
+    // from ifLet/scope stores etc. so there is no way
+    // to allow you to don't care about redundant actions 😢
+    // Maybe we'll add a workaround later, or just stick
+    // with the main approach... (to be discussed)
+
+    // store.send(.derived(.decrement))
   }
 }

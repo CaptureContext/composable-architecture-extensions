@@ -1,65 +1,46 @@
 import ComposableArchitecture
 import FoundationExtensions
 
-extension Reducer where State: Hashable, Action == RoutingAction<State>{
-  public static func router() -> Reducer {
-    Reducer { currentRoute, action, environment in
-      switch action {
-      case let .navigate(to: newRoute):
-        currentRoute = newRoute
-        return .none
-      }
+extension ReducerProtocol where
+  State: RoutableState,
+  Action: RoutableAction,
+  State.Route == Action.Route
+{
+  @inlinable
+  public func routing() -> some ReducerProtocol<State, Action> {
+    CombineReducers {
+      self
+      Scope(
+        state: \State.currentRoute,
+        action: /Action.router,
+        _RoutingReducer.init
+      )
     }
   }
 }
 
-extension Reducer where State: RoutableState, Action == State.RoutingAction {
-  @available(*, deprecated, message: "Use reducer.routing() instead")
-  public static func router() -> Reducer {
-    return Reducer<State.Route, Action, Void>.router()
-      .pullback(
-        state: \.currentRoute,
-        action: /.self,
-        environment: { _ in }
-      )
-  }
-}
+@usableFromInline
+struct _RoutingReducer<
+  Route: Hashable
+>: ReducerProtocol {
+  @usableFromInline
+  typealias State = Route
 
-extension Reducer {
-  public func routing<Route: Hashable>(
-    state toLocalState: WritableKeyPath<State, Route>,
-    action toLocalAction: CasePath<Action, RoutingAction<Route>>
-  ) -> Reducer {
-    .combine(
-      self,
-      Reducer<Route, RoutingAction<Route>, Void>.router()
-        .pullback(
-          state: toLocalState,
-          action: toLocalAction,
-          environment: { _ in }
-        )
-    )
-  }
-}
+  @usableFromInline
+  typealias Action = RoutingAction<Route>
 
-extension Reducer where State: RoutableState {
-  public func routing(
-    action: CasePath<Action, State.RoutingAction>
-  ) -> Reducer {
-    return routing(state: \.currentRoute, action: action)
-  }
-}
+  @inlinable
+  public init() {}
 
-
-extension Reducer where
-  State: RoutableState,
-  Action: RouterAction,
-  State.Route == Action.Route
-{
-  public func routing() -> Reducer {
-    return routing(
-      state: \State.currentRoute,
-      action: /Action.router
-    )
+  @inlinable
+  public func reduce(
+    into state: inout State,
+    action: Action
+  ) -> EffectTask<Action> {
+    switch action {
+    case let .navigate(to: newRoute):
+      state = newRoute
+      return .none
+    }
   }
 }

@@ -25,13 +25,15 @@ public protocol ComposableCoreProvider {
 
 extension ComposableCoreProvider {
   public typealias Core = ComposableCore<State, Action>
-  
+
+  @inlinable
   public func resetCore() {
     core.releaseStore()
   }
 }
 
 public protocol CoreResetable {
+  @inlinable
   func resetCore()
 }
 
@@ -40,18 +42,22 @@ public protocol ComposableObjectProtocol:
   ComposableCoreProvider,
   CoreResetable
 {
+  @inlinable
   func scope(_ store: Core.Store?)
 
+  @inlinable
   func storeWillSet(
     from oldStore: Core.Store?,
     to newStore: Core.Store?
   )
 
+  @inlinable
   func storeWasSet(
     from oldStore: Core.Store?,
     to newStore: Core.Store?
   )
 
+  @inlinable
   func bind(
     _ state: Core.StorePublisher,
     into cancellables: inout Core.Cancellables
@@ -59,6 +65,7 @@ public protocol ComposableObjectProtocol:
 }
 
 extension ComposableObjectProtocol {
+  @inlinable
   public func __setupCore() {
     core.onScope { [weak self] store in
       self?.scope(store)

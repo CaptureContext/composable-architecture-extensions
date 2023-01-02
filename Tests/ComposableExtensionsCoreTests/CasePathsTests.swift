@@ -25,39 +25,54 @@ final class CasePathsTests: XCTestCase {
     }
     
     var value: Test = .a(0)
-    XCTAssertEqual(value.a, 0)
-    XCTAssertEqual(value.b, nil)
-    XCTAssertEqual(value.c, nil)
+
+    do {
+      XCTAssertEqual(value.a, 0)
+      XCTAssertEqual(value.b, nil)
+      XCTAssertEqual(value.c, nil)
+    }
     
-    value.a = 1
-    XCTAssertEqual(value, .a(1))
-    XCTAssertEqual(value.b, nil)
-    XCTAssertEqual(value.c, nil)
+    do {
+      value.a = 1
+      XCTAssertEqual(value, .a(1))
+      XCTAssertEqual(value.b, nil)
+      XCTAssertEqual(value.c, nil)
+    }
     
-    value.a? += 1
-    XCTAssertEqual(value, .a(2))
-    XCTAssertEqual(value.b, nil)
-    XCTAssertEqual(value.c, nil)
+    do {
+      value.a? += 1
+      XCTAssertEqual(value, .a(2))
+      XCTAssertEqual(value.b, nil)
+      XCTAssertEqual(value.c, nil)
+    }
     
-    value.b = 0
-    XCTAssertEqual(value, .a(2))
-    XCTAssertEqual(value.b, nil)
-    XCTAssertEqual(value.c, nil)
+    do {
+      value.b = 0
+      XCTAssertEqual(value, .a(2))
+      XCTAssertEqual(value.b, nil)
+      XCTAssertEqual(value.c, nil)
+    }
     
-    value.c = true
-    XCTAssertEqual(value, .a(2))
-    XCTAssertEqual(value.b, nil)
-    XCTAssertEqual(value.c, nil)
+    do {
+      value.c = true
+      XCTAssertEqual(value, .a(2))
+      XCTAssertEqual(value.b, nil)
+      XCTAssertEqual(value.c, nil)
+    }
     
-    value = .b(0)
-    XCTAssertEqual(value.a, nil)
-    XCTAssertEqual(value.b, 0)
-    XCTAssertEqual(value.c, nil)
+    do {
+      value = .b(0)
+      XCTAssertEqual(value.a, nil)
+      XCTAssertEqual(value.b, 0)
+      XCTAssertEqual(value.c, nil)
+    }
     
-    value.b = 1
-    XCTAssertEqual(value.a, nil)
-    XCTAssertEqual(value.b, 1)
-    XCTAssertEqual(value.c, nil)
+    do {
+      value.b = 1
+      XCTAssertEqual(value.a, nil)
+      XCTAssertEqual(value.b, 1)
+      XCTAssertEqual(value.c, nil)
+    }
   }
   
   func testCaseMarker() {
@@ -72,18 +87,25 @@ final class CasePathsTests: XCTestCase {
     let cMarker = CaseMarker(for: /Test.c)
     
     var value: Test = .a(0)
-    XCTAssertTrue(aMarker.matches(value))
-    XCTAssertFalse(bMarker.matches(value))
-    XCTAssertFalse(cMarker.matches(value))
+
+    do {
+      XCTAssertTrue(aMarker.matches(value))
+      XCTAssertFalse(bMarker.matches(value))
+      XCTAssertFalse(cMarker.matches(value))
+    }
     
-    value = .b(0)
-    XCTAssertFalse(aMarker.matches(value))
-    XCTAssertTrue(bMarker.matches(value))
-    XCTAssertFalse(cMarker.matches(value))
+    do {
+      value = .b(0)
+      XCTAssertFalse(aMarker.matches(value))
+      XCTAssertTrue(bMarker.matches(value))
+      XCTAssertFalse(cMarker.matches(value))
+    }
     
-    value = .c(false)
-    XCTAssertFalse(aMarker.matches(value))
-    XCTAssertFalse(bMarker.matches(value))
-    XCTAssertTrue(cMarker.matches(value))
+    do {
+      value = .c(false)
+      XCTAssertFalse(aMarker.matches(value))
+      XCTAssertFalse(bMarker.matches(value))
+      XCTAssertTrue(cMarker.matches(value))
+    }
   }
 }

@@ -1,4 +1,4 @@
-// swift-tools-version:5.6
+// swift-tools-version:5.7
 
 import PackageDescription
 
@@ -30,21 +30,12 @@ let package = Package(
       name: "ComposableNavigation",
       type: .static,
       targets: ["ComposableNavigation"]
-    ),
-    .library(
-      name: "StoreSchedulers",
-      type: .static,
-      targets: ["StoreSchedulers"]
     )
   ],
   dependencies: [
     .package(
       url: "https://github.com/pointfreeco/swift-composable-architecture.git",
-      .upToNextMajor(from: "0.39.1")
-    ),
-    .package(
-      url: "https://github.com/capturecontext/swift-composable-environment.git",
-      .upToNextMinor(from: "0.0.1")
+      .upToNextMinor(from: "0.47.2")
     ),
     .package(
       url: "https://github.com/capturecontext/combine-extensions.git",
@@ -52,15 +43,15 @@ let package = Package(
     ),
     .package(
       url: "https://github.com/capturecontext/combine-cocoa-navigation.git",
-      branch: "main"
+      .upToNextMinor(from: "0.1.0")
     ),
     .package(
       url: "https://github.com/capturecontext/swift-cocoa-extensions.git",
-      branch: "main"
+      .upToNextMinor(from: "0.1.0")
     ),
     .package(
       url: "https://github.com/capturecontext/swift-foundation-extensions.git",
-      branch: "main"
+      .upToNextMinor(from: "0.1.0")
     )
   ],
   targets: [ // MARK: - Targets
@@ -87,7 +78,6 @@ let package = Package(
       name: "ComposableCore",
       dependencies: [
         .target(name: "ComposableExtensionsCore"),
-        .target(name: "StoreSchedulers"),
         .product(
           name: "ComposableArchitecture",
           package: "swift-composable-architecture"
@@ -130,19 +120,6 @@ let package = Package(
         .product(
           name: "ComposableArchitecture",
           package: "swift-composable-architecture"
-        )
-      ]
-    ),
-    .target(
-      name: "StoreSchedulers",
-      dependencies: [
-        .product(
-          name: "CombineExtensions",
-          package: "combine-extensions"
-        ),
-        .product(
-          name: "ComposableDependencies",
-          package: "swift-composable-environment"
         )
       ]
     ),

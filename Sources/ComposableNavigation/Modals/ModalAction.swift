@@ -1,7 +1,15 @@
 import ComposableArchitecture
 import Foundation
 
-public enum ModalAction<Action> {
+public protocol ModalActionProtocol<Action> {
+  associatedtype Action
+  static func action(_ action: Action) -> Self
+  static var present: Self { get }
+  static var dismiss: Self { get }
+  static var toggle: Self { get }
+}
+
+public enum ModalAction<Action>: ModalActionProtocol {
   case action(Action)
   case present
   case dismiss

@@ -6,13 +6,15 @@ import CocoaAliases
 import FoundationExtensions
 import CombineNavigation
 
-fileprivate extension Cancellable {
+extension Cancellable {
+  @usableFromInline
   func store(in cancellable: inout Cancellable?) {
     cancellable = self
   }
 }
 
 extension ComposableViewController {
+  @inlinable
   public func configureRoutes<
     Route: Hashable & ExpressibleByNilLiteral
   >(

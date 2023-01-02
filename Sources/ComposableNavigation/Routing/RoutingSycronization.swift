@@ -1,29 +1,31 @@
 import ComposableArchitecture
 import ComposableExtensionsCore
 
-extension Reducer {
-  public func dismissOn(_ actions: Action...) -> Reducer
-  where Action: RouterAction, Action: Equatable, Action.Route: ExpressibleByNilLiteral {
-    .combine(
-      self,
-      Reducer { state, action, environment in
+extension ReducerProtocol {
+  @inlinable
+  public func dismissOn(_ actions: Action...) -> some ReducerProtocol<State, Action>
+  where Action: RoutableAction, Action: Equatable, Action.Route: ExpressibleByNilLiteral {
+    CombineReducers {
+      self
+      Reduce { state, action in
         guard actions.contains(action)
         else { return .none }
-        return Effect(value: .router(.dismiss))
+        return .init(value: .router(.dismiss))
       }
-    )
+    }
   }
-  
-  public func dismissOn(_ paths: CaseMarker<Action>...) -> Reducer
-  where Action: RouterAction, Action.Route: ExpressibleByNilLiteral {
-    .combine(
-      self,
-      Reducer { state, action, environment in
+
+  @inlinable
+  public func dismissOn(_ paths: CaseMarker<Action>...) -> some ReducerProtocol<State, Action>
+  where Action: RoutableAction, Action.Route: ExpressibleByNilLiteral {
+    CombineReducers {
+      self
+      Reduce { state, action in
         return paths.contains { $0.matches(action) }
-          ? Effect(value: .router(.dismiss))
-          : .none
+        ? .init(value: .router(.dismiss))
+        : .none
       }
-    )
+    }
   }
 }
 
