@@ -1,7 +1,7 @@
 import ComposableArchitecture
 import FoundationExtensions
 
-public struct LazyReducer<Wrapped: ReducerProtocol>: ReducerProtocol {
+public struct LazyReducer<Wrapped: Reducer>: Reducer {
   public typealias State = Wrapped.State
   public typealias Action = Wrapped.Action
 
@@ -9,11 +9,11 @@ public struct LazyReducer<Wrapped: ReducerProtocol>: ReducerProtocol {
   let makeReducer: () -> Wrapped
 
   @usableFromInline
-  var reducer: Indirect<Wrapped?> = .init(nil)
+	@Box var reducer: Wrapped? = nil
 
   @inlinable
   public init(
-    @ReducerBuilderOf<Wrapped> _ build: @escaping () -> Wrapped
+    @ReducerBuilder<Wrapped.State, Wrapped.Action> _ build: @escaping () -> Wrapped
   ) {
     self.makeReducer = build
   }
@@ -28,12 +28,12 @@ public struct LazyReducer<Wrapped: ReducerProtocol>: ReducerProtocol {
   @inlinable
   public func reduce(
     into state: inout Wrapped.State, action: Wrapped.Action
-  ) -> EffectTask<Wrapped.Action> {
-    switch reducer.wrappedValue {
+  ) -> Effect<Wrapped.Action> {
+    switch reducer {
     case let .some(wrapped):
       return wrapped.reduce(into: &state, action: action)
     case .none:
-      reducer._setValue(makeReducer())
+      reducer = makeReducer()
       return reduce(into: &state, action: action)
     }
   }

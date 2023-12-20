@@ -1,12 +1,12 @@
 import ComposableArchitecture
 
-extension ReducerProtocol {
+extension Reducer {
   @inlinable
   public func onChange<LocalState>(
     of localState: @escaping (State) -> LocalState,
     isEqual: @escaping (LocalState, LocalState) -> Bool,
-    reduce: @escaping (LocalState, State) -> EffectTask<Action>
-  ) -> some ReducerProtocol<State, Action> {
+    reduce: @escaping (LocalState, State) -> Effect<Action>
+  ) -> some Reducer<State, Action> {
     _OnChangeReducer(
       self,
       of: localState,
@@ -18,8 +18,8 @@ extension ReducerProtocol {
   @inlinable
   public func onChange<LocalState: Equatable>(
     of localState: @escaping (State) -> LocalState,
-    reduce: @escaping (LocalState, State) -> EffectTask<Action>
-  ) -> some ReducerProtocol<State, Action> {
+    reduce: @escaping (LocalState, State) -> Effect<Action>
+  ) -> some Reducer<State, Action> {
     _OnChangeReducer(
       self,
       of: localState,
@@ -30,7 +30,7 @@ extension ReducerProtocol {
 }
 
 @usableFromInline
-struct _OnChangeReducer<Wrapped: ReducerProtocol>: ReducerProtocol {
+struct _OnChangeReducer<Wrapped: Reducer>: Reducer {
   @usableFromInline
   typealias State = Wrapped.State
 
@@ -45,7 +45,7 @@ struct _OnChangeReducer<Wrapped: ReducerProtocol>: ReducerProtocol {
     _ reducer: Wrapped,
     of localState: @escaping (State) -> LocalState,
     isEqual: @escaping (LocalState, LocalState) -> Bool,
-    reduce: @escaping (LocalState, State) -> EffectTask<Action>
+    reduce: @escaping (LocalState, State) -> Effect<Action>
   ) {
     var previousState: LocalState?
     self.reducer = Reduce(CombineReducers {
@@ -68,7 +68,7 @@ struct _OnChangeReducer<Wrapped: ReducerProtocol>: ReducerProtocol {
   }
 
   @inlinable
-  public var body: some ReducerProtocol<State, Action> {
+  public var body: some Reducer<State, Action> {
     reducer
   }
 }

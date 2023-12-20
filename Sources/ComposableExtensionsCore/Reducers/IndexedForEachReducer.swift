@@ -1,21 +1,20 @@
 import ComposableArchitecture
 
-extension ReducerProtocol {
+extension Reducer {
   @inlinable
-  public func forEach<Element: ReducerProtocol>(
+  public func _forEach<Element: Reducer>(
     _ toElementsState: WritableKeyPath<State, [Element.State]>,
     action toElementAction: CasePath<Action, (Int, Element.Action)>,
-    @ReducerBuilderOf<Element> _ element: () -> Element,
-    file: StaticString = #file,
+    @ReducerBuilder<Element.State, Element.Action> element: () -> Element,
+    elementType: Element.Type = Element.self,
     fileID: StaticString = #fileID,
     line: UInt = #line
-  ) -> some ReducerProtocol<State, Action> {
+  ) -> some Reducer<State, Action> {
     _IndexedForEachReducer(
       parent: self,
       toElementsState: toElementsState,
       toElementAction: toElementAction,
       element: element(),
-      file: file,
       fileID: fileID,
       line: line
     )
@@ -24,8 +23,8 @@ extension ReducerProtocol {
 
 @usableFromInline
 struct _IndexedForEachReducer<
-  Parent: ReducerProtocol, Element: ReducerProtocol
->: ReducerProtocol {
+  Parent: Reducer, Element: Reducer
+>: Reducer {
   @usableFromInline
   let parent: Parent
 
@@ -39,9 +38,6 @@ struct _IndexedForEachReducer<
   let element: Element
 
   @usableFromInline
-  let file: StaticString
-
-  @usableFromInline
   let fileID: StaticString
 
   @usableFromInline
@@ -53,7 +49,6 @@ struct _IndexedForEachReducer<
     toElementsState: WritableKeyPath<Parent.State, [Element.State]>,
     toElementAction: CasePath<Parent.Action, (Int, Element.Action)>,
     element: Element,
-    file: StaticString,
     fileID: StaticString,
     line: UInt
   ) {
@@ -61,7 +56,6 @@ struct _IndexedForEachReducer<
     self.toElementsState = toElementsState
     self.toElementAction = toElementAction
     self.element = element
-    self.file = file
     self.fileID = fileID
     self.line = line
   }
@@ -69,7 +63,7 @@ struct _IndexedForEachReducer<
   @inlinable
   public func reduce(
     into state: inout Parent.State, action: Parent.Action
-  ) -> EffectTask<Parent.Action> {
+  ) -> Effect<Parent.Action> {
     self.reduceForEach(into: &state, action: action)
       .merge(with: self.parent.reduce(into: &state, action: action))
   }
@@ -77,14 +71,14 @@ struct _IndexedForEachReducer<
   @inlinable
   func reduceForEach(
     into state: inout Parent.State, action: Parent.Action
-  ) -> EffectTask<Parent.Action> {
+  ) -> Effect<Parent.Action> {
     guard let (index, elementAction) = self.toElementAction.extract(from: action)
     else { return .none }
 
     guard state[keyPath: self.toElementsState].indices.contains(index) else {
       runtimeWarn(
         """
-        A "forEach" at "\(self.fileID):\(self.line)" received an action for a missing element.
+        A "forEach" at "\(self.fileID):\(self.line)" received an action for a missing element. …
 
           Action:
             \(debugCaseOutput(action))
@@ -102,9 +96,7 @@ struct _IndexedForEachReducer<
         • This action was sent to the store while its state contained no element at this index. To \
         fix this make sure that actions for this reducer can only be sent from a view store when \
         its state contains an element at this index. In SwiftUI applications, use "ForEachStore" and IdentifiedArray.
-        """,
-        file: self.file,
-        line: self.line
+        """
       )
       return .none
     }

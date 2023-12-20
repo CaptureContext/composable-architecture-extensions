@@ -2,6 +2,7 @@
 import CocoaExtensions
 import ComposableCore
 import CocoaAliases
+import Combine
 
 public protocol ComposableViewControllerProtocol:
   CocoaViewController,
@@ -12,42 +13,72 @@ open class ComposableViewController<
   State,
   Action
 >: CustomCocoaViewController, ComposableViewControllerProtocol {
-  public let core: ComposableCore<State, Action> = .init()
-  
-  open override func viewDidLoad() {
-    super.viewDidLoad()
-    self.configure()
-  }
-  
-  open override func _init() {
-    super._init()
-    self.__setupCore()
-  }
+	public typealias Store = ComposableArchitecture.Store<State, Action>
+	public typealias StorePublisher = ComposableArchitecture.StorePublisher<State>
+	public typealias Cancellables = Set<AnyCancellable>
 
-  @inlinable
-  open func configure() {}
+	@usableFromInline
+	internal let core: ComposableCore<State, Action> = .init()
 
-  @inlinable
-  open func scope(
-    _ store: Core.Store?
-  ) {}
+	@inlinable
+	public var store: Store? { core.store }
 
-  @inlinable
-  open func storeWillSet(
-    from oldStore: Core.Store?,
-    to newStore: Core.Store?
-  ) {}
+	@inlinable
+	public convenience init(store: Store?) {
+		self.init()
+		core.setStore(store)
+	}
 
-  @inlinable
-  open func storeWasSet(
-    from oldStore: Core.Store?,
-    to newStore: Core.Store?
-  ) {}
+	@inlinable
+	public convenience init(store: ComposableArchitecture.Store<State?, Action>?) {
+		self.init()
+		core.setStore(store)
+	}
 
-  @inlinable
-  open func bind(
-    _ state: Core.StorePublisher,
-    into cancellables: inout Core.Cancellables
-  ) {}
+	override open func _init() {
+		super._init()
+		core.onStoreWillSet { [weak self] in self?.storeWillSet(from: $0, to: $1) }
+		core.onStoreDidSet { [weak self] in self?.storeDidSet(from: $0, to: $1) }
+		core.onScope { [weak self] in self?.scope($0) }
+		core.onBind { [weak self] in self?.bind($0, into: &$1.wrappedValue) }
+	}
+
+	/// Sets a new store with an optional state
+	@inlinable
+	public func setStore(
+		_ store: ComposableArchitecture.Store<State?, Action>?
+	) {
+		core.setStore(store)
+	}
+
+	/// Sets a new store
+	@inlinable
+	public func setStore(_ store: Store?) {
+		core.setStore(store)
+	}
+
+	@inlinable
+	public func releaseStore() {
+		core.releaseStore()
+	}
+
+	open func storeWillSet(
+		from oldStore: Store?,
+		to newStore: Store?
+	) {}
+
+	open func storeDidSet(
+		from oldStore: Store?,
+		to newStore: Store?
+	) {}
+
+	open func scope(
+		_ store: Store?
+	) {}
+
+	open func bind(
+		_ state: StorePublisher,
+		into cancellables: inout Cancellables
+	) {}
 }
 #endif

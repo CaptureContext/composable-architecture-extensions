@@ -1,6 +1,6 @@
 # composable-architecture-extensions
 
-[![SwiftPM 5.6](https://img.shields.io/badge/swiftpm-5.6-ED523F.svg?style=flat)](https://swift.org/download/) ![Platforms](https://img.shields.io/badge/Platforms-iOS_13_|_macOS_10.15_|_Catalyst_|_tvOS_14_|_watchOS_7-ED523F.svg?style=flat) [![@maximkrouk](https://img.shields.io/badge/contact-@capturecontext-1DA1F2.svg?style=flat&logo=twitter)](https://twitter.com/capture_context) 
+[![SwiftPM 5.9](https://img.shields.io/badge/swiftpm-5.9-ED523F.svg?style=flat)](https://swift.org/download/) ![Platforms](https://img.shields.io/badge/Platforms-iOS_13_|_macOS_10.15_|_Catalyst_|_tvOS_14_|_watchOS_7-ED523F.svg?style=flat) [![@maximkrouk](https://img.shields.io/badge/contact-@capturecontext-1DA1F2.svg?style=flat&logo=twitter)](https://twitter.com/capture_context) 
 
 > NOTE: The package is early beta (feel free suggest your improvements [here](https://github.com/capturecontext/composable-architecture-extensions/discussions/1))
 >
@@ -20,9 +20,8 @@ If you use SwiftPM for your project, you can add ComposableExtensions to your pa
 
 ```swift
 .package(
-  name: "swift-standard-clients",
   url: "https://github.com/capturecontext/composable-architecture-extensions.git", 
-  .branch("0.1.0")
+  branch: "observation-beta"
 )
 ```
 
@@ -34,8 +33,6 @@ Do not forget about target dependencies:
   package: "composable-architecture-extensions"
 )
 ```
-
-
 
 ## License
 

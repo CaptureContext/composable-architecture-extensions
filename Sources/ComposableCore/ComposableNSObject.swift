@@ -1,18 +1,12 @@
-#if !os(watchOS)
-import CocoaExtensions
-import ComposableCore
-import CocoaAliases
+import ComposableArchitecture
 import Combine
+import Foundation
 
-public protocol ComposableCocoaViewProtocol:
-  CocoaView,
-  ComposableObjectProtocol
-{}
+public typealias ComposableNSObjectOf<
+	Reducer: ComposableArchitecture.Reducer
+> = ComposableObject<Reducer.State, Reducer.Action>
 
-open class ComposableCocoaView<
-  State,
-  Action
->: CustomCocoaView, ComposableCocoaViewProtocol {
+open class ComposableNSObject<State, Action>: NSObject, ComposableObjectProtocol {
 	public typealias Store = ComposableArchitecture.Store<State, Action>
 	public typealias StorePublisher = ComposableArchitecture.StorePublisher<State>
 	public typealias Cancellables = Set<AnyCancellable>
@@ -26,17 +20,17 @@ open class ComposableCocoaView<
 	@inlinable
 	public convenience init(store: Store?) {
 		self.init()
-		core.setStore(store)
+		setStore(store)
 	}
 
 	@inlinable
 	public convenience init(store: ComposableArchitecture.Store<State?, Action>?) {
 		self.init()
-		core.setStore(store)
+		setStore(store)
 	}
 
-	override open func _init() {
-		super._init()
+	public override init() {
+		super.init()
 		core.onStoreWillSet { [weak self] in self?.storeWillSet(from: $0, to: $1) }
 		core.onStoreDidSet { [weak self] in self?.storeDidSet(from: $0, to: $1) }
 		core.onScope { [weak self] in self?.scope($0) }
@@ -81,4 +75,3 @@ open class ComposableCocoaView<
 		into cancellables: inout Cancellables
 	) {}
 }
-#endif
