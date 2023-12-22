@@ -15,6 +15,7 @@ public class ComposableStackDestination<
 	public typealias State = Controller.State
 	public typealias Action = Controller.Action
 	public typealias Store = ComposableArchitecture.Store<State, Action>
+	public typealias OptionalStateStore = ComposableArchitecture.Store<State?, Action>
 
 	@inlinable
 	public override var wrappedValue: [DestinationID: Controller] {
@@ -27,43 +28,57 @@ public class ComposableStackDestination<
 	}
 
 	@usableFromInline
-	internal var cores: [DestinationID: ComposableCore<State, Action>] = [:]
+	internal var storeForID: (DestinationID) -> Store? = { _ in nil }
 
 	@usableFromInline
-	internal func core(for id: DestinationID) -> ComposableCore<State, Action> {
-		return cores[id] ?? {
-			let core = ComposableCore<State, Action>()
-			core.onStoreDidSet { [weak self] in self?.storeDidSet(for: id, from: $0, to: $1) }
-			self.cores[id] = core
-			return core
-		}()
+	internal var optionalStateStoreForID: (DestinationID) -> OptionalStateStore? = { _ in nil }
+
+	@usableFromInline
+	func syncControllers() {
+		_controllers.forEach { id, controller in
+			syncController(controller, withStoreFor: id)
+		}
 	}
 
+	@usableFromInline
+	func syncController(_ controller: Controller, withStoreFor id: DestinationID) {
+		if let store = storeForID(id) {
+			controller.setStore(store)
+		} else if let store = optionalStateStoreForID(id) {
+			controller.setStore(store)
+		} else {
+			controller.releaseStore()
+		}
+	}
+
+	@inlinable
 	override public func configureController(
 		_ controller: Controller,
 		for id: DestinationID
 	) {
-		controller.setStore(core(for: id).store)
+		syncController(controller, withStoreFor: id)
+	}
+
+	/// Sets a new store
+	@inlinable
+	public func setStore(
+		_ storeForID: @escaping (DestinationID) -> Store?
+	) {
+		self.storeForID = storeForID
+		self.syncControllers()
 	}
 
 	/// Sets a new store with an optional state
 	@inlinable
 	public func setStore(
-		_ store: ComposableArchitecture.Store<State?, Action>?,
-		for id: DestinationID
+		_ optionalStateStoreForID: @escaping (DestinationID) -> OptionalStateStore?
 	) {
-		core(for: id).setStore(store)
-	}
-
-	/// Sets a new store
-	@inlinable
-	public func setStore(_ store: Store?, for id: DestinationID) {
-		core(for: id).setStore(store)
+		self.optionalStateStoreForID = optionalStateStoreForID
+		self.syncControllers()
 	}
 
 	@inlinable
 	public func releaseStore(for id: DestinationID) {
-		cores.removeValue(forKey: id)?.releaseStore()
 		wrappedValue[id]?.releaseStore()
 	}
 
@@ -71,15 +86,6 @@ public class ComposableStackDestination<
 	override public func _invalidateDestination(for id: DestinationID) {
 		self.releaseStore(for: id)
 		super._invalidateDestination(for: id)
-	}
-
-	@usableFromInline
-	internal func storeDidSet(
-		for id: DestinationID,
-		from oldStore: Store?,
-		to newStore: Store?
-	) {
-		wrappedValue[id]?.setStore(core(for: id).store)
 	}
 }
 #endif

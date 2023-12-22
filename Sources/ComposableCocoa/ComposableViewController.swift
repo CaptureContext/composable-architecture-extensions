@@ -96,22 +96,37 @@ open class ComposableViewController<
 #if canImport(UIKit) && !os(macOS)
 extension ComposableViewControllerProtocol {
 	public func navigationStack<
-		P: Publisher,
-		StackElementState
+		StackElementState,
+		StackElementAction
 	>(
-		_ publisher: P,
+		state toStackState: KeyPath<State, StackState<StackElementState>>,
+		action toStackAction: CaseKeyPath<Action, StackAction<StackElementState, StackElementAction>>,
 		switch destination: @escaping (StackElementState) -> any GrouppedDestinationProtocol<StackElementID>,
-		onPop: @escaping ([StackElementID]) -> Void
-	) -> Cancellable where
-		P.Output == StackState<StackElementState>,
-		P.Failure == Never
-	{
-		navigationStack(
-			publisher.removeDuplicates(by: { $0.ids == $1.ids }),
+		file: StaticString = #file,
+		line: UInt = #line
+	) -> Cancellable {
+		guard let store = store else {
+			assertionFailure("""
+			Store was missing on \(#function) call in \
+			\(file) | \(line)
+			""")
+
+			return AnyCancellable {}
+		}
+
+		return navigationStack(
+			store.publisher.map(toStackState).removeDuplicates(by: { $0.ids == $1.ids }),
 			ids: \.ids,
 			route: { $0[id: $1] },
 			switch: destination,
-			onPop: onPop
+			onPop: { [weak self] ids in
+				guard
+					let id = ids.first,
+					let store = self?.store
+				else { return }
+
+				store.send(toStackAction.callAsFunction(.popFrom(id: id)))
+			}
 		)
 	}
 }

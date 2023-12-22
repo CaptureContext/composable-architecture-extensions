@@ -10,6 +10,7 @@ public class ComposableTreeDestination<Controller: ComposableViewControllerProto
 	public typealias State = Controller.State
 	public typealias Action = Controller.Action
 	public typealias Store = ComposableArchitecture.Store<State, Action>
+	public typealias OptionalStateStore = ComposableArchitecture.Store<State?, Action>
 
 	@inlinable
 	public override var wrappedValue: Controller? { super.wrappedValue }
@@ -18,46 +19,56 @@ public class ComposableTreeDestination<Controller: ComposableViewControllerProto
 	public override var projectedValue: ComposableTreeDestination<Controller> { super.projectedValue as! Self }
 
 	@usableFromInline
-	internal let core: ComposableCore<State, Action> = .init()
+	internal var store: () -> Store? = { nil }
 
-	@inlinable
-	public convenience init(store: Store?) {
-		self.init()
-		core.setStore(store)
+	@usableFromInline
+	internal var optionalStateStore: () -> OptionalStateStore? = { nil }
+
+	@usableFromInline
+	func syncController(_ controller: Controller?) {
+		if let store = store() {
+			controller?.setStore(store)
+		} else if let store = optionalStateStore() {
+			controller?.setStore(store)
+		} else {
+			controller?.releaseStore()
+		}
 	}
 
 	@inlinable
-	public convenience init(store: ComposableArchitecture.Store<State?, Action>?) {
+	public convenience init(store: @escaping @autoclosure () -> Store?) {
 		self.init()
-		core.setStore(store)
+		self.store = store
 	}
 
-	public override init() {
-		super.init()
-		core.onStoreDidSet { [weak self] in self?.storeDidSet(from: $0, to: $1) }
+	@inlinable
+	public convenience init(store: @escaping @autoclosure () -> OptionalStateStore?) {
+		self.init()
+		self.optionalStateStore = store
 	}
 
 	override public func configureController(_ controller: Controller) {
-		controller.setStore(core.store)
+		syncController(controller)
+	}
+
+	/// Sets a new store
+	@inlinable
+	public func setStore(_ store: @escaping @autoclosure () -> Store?) {
+		self.store = store
+		syncController(wrappedValue)
 	}
 
 	/// Sets a new store with an optional state
 	@inlinable
 	public func setStore(
-		_ store: ComposableArchitecture.Store<State?, Action>?
+		_ store: @escaping @autoclosure () -> OptionalStateStore?
 	) {
-		core.setStore(store)
-	}
-
-	/// Sets a new store
-	@inlinable
-	public func setStore(_ store: Store?) {
-		core.setStore(store)
+		self.optionalStateStore = store
+		syncController(wrappedValue)
 	}
 
 	@inlinable
 	public func releaseStore() {
-		core.releaseStore()
 		wrappedValue?.releaseStore()
 	}
 
@@ -65,14 +76,6 @@ public class ComposableTreeDestination<Controller: ComposableViewControllerProto
 	override public func _invalidateDestination() {
 		self.releaseStore()
 		super._invalidateDestination()
-	}
-
-	@usableFromInline
-	internal func storeDidSet(
-		from oldStore: Store?,
-		to newStore: Store?
-	) {
-		wrappedValue?.setStore(newStore)
 	}
 }
 #endif
