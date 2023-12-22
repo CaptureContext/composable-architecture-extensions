@@ -94,14 +94,14 @@ open class ComposableViewController<
 }
 
 #if canImport(UIKit) && !os(macOS)
-extension ComposableViewControllerProtocol {
+extension ComposableViewControllerProtocol where Self: RoutingController {
 	public func navigationStack<
 		StackElementState,
 		StackElementAction
 	>(
 		state toStackState: KeyPath<State, StackState<StackElementState>>,
 		action toStackAction: CaseKeyPath<Action, StackAction<StackElementState, StackElementAction>>,
-		switch destination: @escaping (StackElementState) -> any GrouppedDestinationProtocol<StackElementID>,
+		switch destination: @escaping (Destinations, StackElementState) -> any GrouppedDestinationProtocol<StackElementID>,
 		file: StaticString = #file,
 		line: UInt = #line
 	) -> Cancellable {
@@ -126,6 +126,90 @@ extension ComposableViewControllerProtocol {
 				else { return }
 
 				store.send(toStackAction.callAsFunction(.popFrom(id: id)))
+			}
+		)
+	}
+}
+
+extension ComposableViewControllerProtocol where Self: RoutingController {
+	/// Subscribes on publisher of navigation destination state
+	@inlinable
+	public func navigationDestination(
+		isPresented toIsPresented: KeyPath<State, Bool>,
+		destination: SingleDestinationProtocol,
+		popAction: Action,
+		file: StaticString = #file,
+		line: UInt = #line
+	) -> AnyCancellable {
+		guard let store = store else {
+			assertionFailure("""
+			Store was missing on \(#function) call in \
+			\(file) | \(line)
+			""")
+
+			return AnyCancellable {}
+		}
+
+		return navigationDestination(
+			toIsPresented,
+			isPresented: store.publisher[dynamicMember: toIsPresented],
+			destination: destination,
+			onPop: { [weak self] in
+				self?.store?.send(popAction)
+			}
+		)
+	}
+
+	/// Subscribes on publisher of navigation destination state
+	@inlinable
+	public func navigationDestination<Route: Hashable>(
+		state toDestinationState: KeyPath<State, PresentationState<Route>>,
+		switch destination: @escaping (Destinations, Route) -> SingleDestinationProtocol,
+		popAction: Action,
+		file: StaticString = #file,
+		line: UInt = #line
+	) -> AnyCancellable where Route: Hashable {
+		guard let store = store else {
+			assertionFailure("""
+			Store was missing on \(#function) call in \
+			\(file) | \(line)
+			""")
+
+			return AnyCancellable {}
+		}
+
+		return navigationDestination(
+			store.publisher[dynamicMember: toDestinationState.appending(path: \.wrappedValue)],
+			switch: destination,
+			onPop: { [weak self] in
+				self?.store?.send(popAction)
+			}
+		)
+	}
+
+	/// Subscribes on publisher of navigation destination state
+	@inlinable
+	public func navigationDestination<Route: Taggable>(
+		state toDestinationState: KeyPath<State, PresentationState<Route>>,
+		switch destination: @escaping (Destinations, Route.Tag) -> SingleDestinationProtocol,
+		popAction: Action,
+		file: StaticString = #file,
+		line: UInt = #line
+	) -> AnyCancellable where Route: Hashable {
+		guard let store = store else {
+			assertionFailure("""
+			Store was missing on \(#function) call in \
+			\(file) | \(line)
+			""")
+
+			return AnyCancellable {}
+		}
+
+		return navigationDestination(
+			store.publisher[dynamicMember: toDestinationState.appending(path: \.wrappedValue?.tag)],
+			switch: destination,
+			onPop: { [weak self] in
+				self?.store?.send(popAction)
 			}
 		)
 	}
