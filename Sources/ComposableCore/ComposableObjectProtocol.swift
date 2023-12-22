@@ -1,9 +1,10 @@
 import ComposableArchitecture
 import Combine
 
-public typealias ComposableObjectProtocolOf<
-	Reducer: ComposableArchitecture.Reducer
-> = ComposableObjectProtocol<Reducer.State, Reducer.Action>
+public typealias ComposableObjectProtocolOf<R: Reducer> = ComposableObjectProtocol<
+	R.State,
+	R.Action
+>
 
 public protocol ComposableObjectProtocol<State, Action> {
 	associatedtype State

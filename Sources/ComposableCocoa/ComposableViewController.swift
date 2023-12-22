@@ -3,11 +3,22 @@ import CocoaExtensions
 import ComposableCore
 import CocoaAliases
 import Combine
+import CombineNavigation
 
-public protocol ComposableViewControllerProtocol:
+public typealias ComposableViewControllerProtocolOf<R: Reducer> = ComposableViewControllerProtocol<
+	R.State,
+	R.Action
+>
+
+public protocol ComposableViewControllerProtocol<State, Action>:
   CocoaViewController,
   ComposableObjectProtocol
 {}
+
+public typealias ComposableViewControllerOf<R: Reducer> = ComposableViewController<
+	R.State,
+	R.Action
+>
 
 open class ComposableViewController<
   State,
@@ -81,4 +92,28 @@ open class ComposableViewController<
 		into cancellables: inout Cancellables
 	) {}
 }
+
+#if canImport(UIKit) && !os(macOS)
+extension ComposableViewControllerProtocol {
+	public func navigationStack<
+		P: Publisher,
+		StackElementState
+	>(
+		_ publisher: P,
+		switch destination: @escaping (StackElementState) -> any GrouppedDestinationProtocol<StackElementID>,
+		onPop: @escaping ([StackElementID]) -> Void
+	) -> Cancellable where
+		P.Output == StackState<StackElementState>,
+		P.Failure == Never
+	{
+		navigationStack(
+			publisher.removeDuplicates(by: { $0.ids == $1.ids }),
+			ids: \.ids,
+			route: { $0[id: $1] },
+			switch: destination,
+			onPop: onPop
+		)
+	}
+}
+#endif
 #endif

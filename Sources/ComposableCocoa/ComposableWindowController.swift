@@ -3,12 +3,27 @@ import ComposableCore
 import CocoaExtensions
 import Combine
 
+public typealias ComposableWindowControllerProtocolOf<R: Reducer> = ComposableWindowControllerProtocol<
+	R.State,
+	R.Action
+>
+
+public protocol ComposableWindowControllerProtocol<State, Action>:
+	NSWindowController,
+	ComposableObjectProtocol
+{}
+
+public typealias ComposableWindowControllerOf<R: Reducer> = ComposableWindowController<
+	R.State,
+	R.Action
+>
+
 open class ComposableWindowController<
   State,
   Action
 >:
   CustomCocoaWindowController,
-  ComposableObjectProtocol
+	ComposableWindowControllerProtocol
 {
 	public typealias Store = ComposableArchitecture.Store<State, Action>
 	public typealias StorePublisher = ComposableArchitecture.StorePublisher<State>

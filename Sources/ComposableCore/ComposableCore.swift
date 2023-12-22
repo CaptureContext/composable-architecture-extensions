@@ -3,6 +3,11 @@ import Combine
 import FunctionalClosures
 import FoundationExtensions
 
+public typealias ComposableCoreOf<R: Reducer> = ComposableCore<
+	R.State,
+	R.Action
+>
+
 public final class ComposableCore<State, Action>: ComposableObjectProtocol {
 	public typealias Store = ComposableArchitecture.Store<State, Action>
 	public typealias StorePublisher = ComposableArchitecture.StorePublisher<State>

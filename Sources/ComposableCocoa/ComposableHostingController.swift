@@ -1,28 +1,23 @@
 #if !os(watchOS)
-import CocoaExtensions
-import ComposableCore
+import SwiftUI
 import CocoaAliases
 import Combine
+import CocoaExtensions
+import ComposableArchitecture
 
-public typealias ComposableCocoaViewProtocolOf<R: Reducer> = ComposableCocoaViewProtocol<
-	R.State,
-	R.Action
->
+public protocol ComposableHostingControllerProtocol<ContentView>:
+	CustomHostingController<Self.ContentView?>,
+	ComposableObjectProtocol
+where State == ContentView.State, Action == ContentView.Action {
+	associatedtype ContentView: ComposableView
+}
 
-public protocol ComposableCocoaViewProtocol<State, Action>:
-  CocoaView,
-  ComposableObjectProtocol
-{}
-
-public typealias ComposableCocoaViewOf<R: Reducer> = ComposableCocoaView<
-	R.State,
-	R.Action
->
-
-open class ComposableCocoaView<
-  State,
-  Action
->: CustomCocoaView, ComposableCocoaViewProtocol {
+public class ComposableHostingController<ContentView: ComposableView>:
+	CustomHostingController<ContentView?>,
+	ComposableViewControllerProtocol
+{
+	public typealias State = ContentView.State
+	public typealias Action = ContentView.Action
 	public typealias Store = ComposableArchitecture.Store<State, Action>
 	public typealias StorePublisher = ComposableArchitecture.StorePublisher<State>
 	public typealias Cancellables = Set<AnyCancellable>
@@ -35,13 +30,13 @@ open class ComposableCocoaView<
 
 	@inlinable
 	public convenience init(store: Store?) {
-		self.init()
+		self.init(rootView: nil)
 		core.setStore(store)
 	}
 
 	@inlinable
 	public convenience init(store: ComposableArchitecture.Store<State?, Action>?) {
-		self.init()
+		self.init(rootView: nil)
 		core.setStore(store)
 	}
 
@@ -49,7 +44,10 @@ open class ComposableCocoaView<
 		super._init()
 		core.onStoreWillSet { [weak self] in self?.storeWillSet(from: $0, to: $1) }
 		core.onStoreDidSet { [weak self] in self?.storeDidSet(from: $0, to: $1) }
-		core.onScope { [weak self] in self?.scope($0) }
+		core.onScope { [weak self] in
+			self?.rootView = $0.map(ContentView.init)
+			self?.scope($0)
+		}
 		core.onBind { [weak self] in self?.bind($0, into: &$1.wrappedValue) }
 	}
 

@@ -2,9 +2,10 @@ import ComposableArchitecture
 import Combine
 import Foundation
 
-public typealias ComposableNSObjectOf<
-	Reducer: ComposableArchitecture.Reducer
-> = ComposableObject<Reducer.State, Reducer.Action>
+public typealias ComposableNSObjectOf<R: Reducer> = ComposableObject<
+	R.State,
+	R.Action
+>
 
 open class ComposableNSObject<State, Action>: NSObject, ComposableObjectProtocol {
 	public typealias Store = ComposableArchitecture.Store<State, Action>
