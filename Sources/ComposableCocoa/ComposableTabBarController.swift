@@ -1,23 +1,24 @@
-#if !os(watchOS)
-import SwiftUI
+#if canImport(UIKit) && !os(watchOS)
+import UIKit
 import CocoaAliases
 import Combine
 import CocoaExtensions
 import ComposableArchitecture
 
-public protocol ComposableHostingControllerProtocol<ContentView>:
-	CustomHostingController<Self.ContentView?>,
-	ComposableViewControllerProtocol
-where State == ContentView.State, Action == ContentView.Action {
-	associatedtype ContentView: ComposableView
-}
+public typealias ComposableTabBarControllerProtocolOf<R: Reducer> = ComposableTabBarControllerProtocol<
+	R.State,
+	R.Action
+>
 
-public class ComposableHostingController<ContentView: ComposableView>:
-	CustomHostingController<ContentView?>,
-	ComposableHostingControllerProtocol
+public protocol ComposableTabBarControllerProtocol<State, Action>:
+	CustomTabBarController,
+	ComposableViewControllerProtocol
+{}
+
+open class ComposableTabBarController<State, Action>:
+	CustomTabBarController,
+	ComposableTabBarControllerProtocol
 {
-	public typealias State = ContentView.State
-	public typealias Action = ContentView.Action
 	public typealias Store = ComposableArchitecture.Store<State, Action>
 	public typealias StorePublisher = ComposableArchitecture.StorePublisher<State>
 	public typealias Cancellables = Set<AnyCancellable>
@@ -30,21 +31,22 @@ public class ComposableHostingController<ContentView: ComposableView>:
 
 	@inlinable
 	public convenience init(store: Store?) {
-		self.init(rootView: nil)
+		self.init()
 		core.setStore(store)
 	}
 
 	@inlinable
 	public convenience init(store: ComposableArchitecture.Store<State?, Action>?) {
-		self.init(rootView: nil)
+		self.init()
 		core.setStore(store)
 	}
 
-	public override func _init() {
+	open override func _init() {
 		super._init()
-		core.onScope { [weak self] in
-			self?.rootView = $0.map(ContentView.init)
-		}
+		core.onStoreWillSet { [weak self] in self?.storeWillSet(from: $0, to: $1) }
+		core.onStoreDidSet { [weak self] in self?.storeDidSet(from: $0, to: $1) }
+		core.onScope { [weak self] in self?.scope($0) }
+		core.onBind { [weak self] in self?.bind($0, into: &$1.wrappedValue) }
 	}
 
 	/// Sets a new store with an optional state
@@ -65,5 +67,24 @@ public class ComposableHostingController<ContentView: ComposableView>:
 	public func releaseStore() {
 		core.releaseStore()
 	}
+
+	open func storeWillSet(
+		from oldStore: Store?,
+		to newStore: Store?
+	) {}
+
+	open func storeDidSet(
+		from oldStore: Store?,
+		to newStore: Store?
+	) {}
+
+	open func scope(
+		_ store: Store?
+	) {}
+
+	open func bind(
+		_ state: StorePublisher,
+		into cancellables: inout Cancellables
+	) {}
 }
 #endif
