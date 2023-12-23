@@ -15,6 +15,11 @@ public protocol ComposableTabBarControllerProtocol<State, Action>:
 	ComposableViewControllerProtocol
 {}
 
+public typealias ComposableTabBarControllerOf<R: Reducer> = ComposableTabBarController<
+	R.State,
+	R.Action
+>
+
 open class ComposableTabBarController<State, Action>:
 	CustomTabBarController,
 	ComposableTabBarControllerProtocol
