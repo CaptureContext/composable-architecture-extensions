@@ -1,10 +1,13 @@
 import ComposableArchitecture
 
-extension Reducer {
+extension Reducer where Action: CasePathable {
+	@available(*, deprecated, message: """
+	Use `IdentifiedArray<Int, Element>` and `IdentifiedAction<Int, Element>` instead of plain `Array<Element>`
+	""")
   @inlinable
   public func _forEach<Element: Reducer>(
     _ toElementsState: WritableKeyPath<State, [Element.State]>,
-    action toElementAction: CasePath<Action, (Int, Element.Action)>,
+    action toElementAction: CaseKeyPath<Action, (Int, Element.Action)>,
     @ReducerBuilder<Element.State, Element.Action> element: () -> Element,
     elementType: Element.Type = Element.self,
     fileID: StaticString = #fileID,
@@ -23,8 +26,11 @@ extension Reducer {
 
 @usableFromInline
 struct _IndexedForEachReducer<
-  Parent: Reducer, Element: Reducer
->: Reducer {
+  Parent: Reducer, 
+	Element: Reducer
+>: Reducer where
+	Parent.Action: CasePathable
+{
   @usableFromInline
   let parent: Parent
 
@@ -32,7 +38,7 @@ struct _IndexedForEachReducer<
   let toElementsState: WritableKeyPath<Parent.State, [Element.State]>
 
   @usableFromInline
-  let toElementAction: CasePath<Parent.Action, (Int, Element.Action)>
+  let toElementAction: CaseKeyPath<Parent.Action, (Int, Element.Action)>
 
   @usableFromInline
   let element: Element
@@ -47,7 +53,7 @@ struct _IndexedForEachReducer<
   init(
     parent: Parent,
     toElementsState: WritableKeyPath<Parent.State, [Element.State]>,
-    toElementAction: CasePath<Parent.Action, (Int, Element.Action)>,
+    toElementAction: CaseKeyPath<Parent.Action, (Int, Element.Action)>,
     element: Element,
     fileID: StaticString,
     line: UInt
@@ -62,7 +68,8 @@ struct _IndexedForEachReducer<
 
   @inlinable
   public func reduce(
-    into state: inout Parent.State, action: Parent.Action
+    into state: inout Parent.State, 
+		action: Parent.Action
   ) -> Effect<Parent.Action> {
     self.reduceForEach(into: &state, action: action)
       .merge(with: self.parent.reduce(into: &state, action: action))
@@ -70,9 +77,10 @@ struct _IndexedForEachReducer<
 
   @inlinable
   func reduceForEach(
-    into state: inout Parent.State, action: Parent.Action
+    into state: inout Parent.State, 
+		action: Parent.Action
   ) -> Effect<Parent.Action> {
-    guard let (index, elementAction) = self.toElementAction.extract(from: action)
+		guard let (index, elementAction) = action[case: toElementAction]
     else { return .none }
 
     guard state[keyPath: self.toElementsState].indices.contains(index) else {
@@ -102,7 +110,10 @@ struct _IndexedForEachReducer<
     }
 
     return self.element
-      .reduce(into: &state[keyPath: self.toElementsState][index], action: elementAction)
-      .map { self.toElementAction.embed((index, $0)) }
+      .reduce(
+				into: &state[keyPath: self.toElementsState][index], 
+				action: elementAction
+			)
+      .map { self.toElementAction((index, $0)) }
   }
 }

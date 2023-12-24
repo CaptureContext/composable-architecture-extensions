@@ -9,7 +9,7 @@ extension Reducer {
   ) -> some Reducer<State?, Action> {
     EmptyReducer<State?, Action>().ifLet(
       \State.self,
-       action: /.self,
+       action: \.self,
        then: { self },
        fileID: fileID,
        line: line

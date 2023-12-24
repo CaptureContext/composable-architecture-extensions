@@ -68,7 +68,7 @@ struct _OnChangeReducer<Wrapped: Reducer>: Reducer {
   }
 
   @inlinable
-  public var body: some Reducer<State, Action> {
+  public var body: some ReducerOf<Self> {
     reducer
   }
 }
