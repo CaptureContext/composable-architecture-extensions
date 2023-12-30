@@ -92,21 +92,18 @@ extension Pullback {
 	}
 
 	@inlinable
-	public init<ID: Hashable, ElementAction: CasePathable, DerivedAction: CasePathable>(
+	public init<ID: Hashable, ElementAction: CasePathable, DerivedAction>(
 		_ toIdentifiedAction: CaseKeyPath<Action, IdentifiedAction<ID, ElementAction>>,
-		element toDerivedAction: CaseKeyPath<ElementAction, DerivedAction>,
+		action toDerivedAction: CaseKeyPath<ElementAction, DerivedAction>,
 		reduce: @escaping (inout State, ID, DerivedAction) -> Effect<Action>
 	) where ChildAction == IdentifiedAction<ID, ElementAction> {
 		self.init(
-			action: toIdentifiedAction,
-			reduce: { state, action in
-				switch action {
-				case let .element(id, action):
-					guard let action = action[case: toDerivedAction]
-					else { return .none }
+			toIdentifiedAction,
+			reduce: { state, id, action in
+				guard let action = action[case: toDerivedAction]
+				 else { return .none }
 
-					return reduce(&state, id, action)
-				}
+				 return reduce(&state, id, action)
 			}
 		)
 	}
@@ -116,19 +113,14 @@ extension Pullback {
 	@inlinable
 	public init<ID: Hashable, ElementAction: CasePathable>(
 		_ toIdentifiedAction: CaseKeyPath<Action, IdentifiedAction<ID, ElementAction>>,
-		element toDerivedAction: CaseKeyPath<ElementAction, Void>,
+		action toDerivedAction: CaseKeyPath<ElementAction, Void>,
 		reduce: @escaping (inout State, ID) -> Effect<Action>
 	) where ChildAction == IdentifiedAction<ID, ElementAction> {
 		self.init(
-			action: toIdentifiedAction,
-			reduce: { state, action in
-				switch action {
-				case let .element(id, action):
-					guard action[case: toDerivedAction].isNotNil
-					else { return .none }
-
-					return reduce(&state, id)
-				}
+			toIdentifiedAction,
+			action: toDerivedAction,
+			reduce: { state, id, _ in
+				return reduce(&state, id)
 			}
 		)
 	}
