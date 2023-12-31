@@ -5,6 +5,11 @@ import Combine
 import CocoaExtensions
 import ComposableArchitecture
 
+#if canImport(UIKit)
+import CombineNavigation
+extension ComposableHostingController: DestinationInitializableControllerProtocol {}
+#endif
+
 public protocol ComposableHostingControllerProtocol<ContentView>:
 	CustomHostingController<Self.ContentView?>,
 	ComposableViewControllerProtocol
@@ -41,7 +46,7 @@ public class ComposableHostingController<ContentView: ComposableView>:
 	}
 
 	@inlinable
-	public init() {
+	public required init() {
 		super.init(rootView: nil)
 	}
 

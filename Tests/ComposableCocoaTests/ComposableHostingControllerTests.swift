@@ -23,4 +23,11 @@ final class ComposableHostingControllerTests: XCTestCase {
 	func testMain() {
 		_ = ComposableHostingController<FeatureView>()
 	}
+
+	func testDestination() {
+		@ComposableViewTreeDestination<FeatureView>
+		var controller
+
+		_ = _controller()
+	}
 }
