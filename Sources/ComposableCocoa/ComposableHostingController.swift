@@ -7,7 +7,11 @@ import ComposableArchitecture
 
 #if canImport(UIKit)
 import CombineNavigation
-extension ComposableHostingController: DestinationInitializableControllerProtocol {}
+extension ComposableHostingController: DestinationInitializableControllerProtocol {
+	public static func _init_for_destination() -> CocoaViewController {
+		return Self.init()
+	}
+}
 #endif
 
 public protocol ComposableHostingControllerProtocol<ContentView>:
@@ -45,10 +49,8 @@ public class ComposableHostingController<ContentView: ComposableView>:
 		core.setStore(store)
 	}
 
-	@_implements(DestinationInitializableControllerProtocol, init())
-	@inlinable
 	public required init() {
-		super.init(rootView: ContentView?.none)
+		super.init(rootView: nil)
 	}
 
 	required init?(coder: NSCoder) {
