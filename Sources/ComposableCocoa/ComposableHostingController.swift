@@ -45,9 +45,10 @@ public class ComposableHostingController<ContentView: ComposableView>:
 		core.setStore(store)
 	}
 
+	@_implements(DestinationInitializableControllerProtocol, init())
 	@inlinable
 	public required init() {
-		super.init(rootView: nil)
+		super.init(rootView: ContentView?.none)
 	}
 
 	required init?(coder: NSCoder) {
