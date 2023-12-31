@@ -5,6 +5,9 @@ import ComposableArchitecture
 import DeclarativeConfiguration
 @_spi(Internals) import CombineNavigation
 
+public typealias ComposableViewStackDestination<View: ComposableView>
+= ComposableStackDestination<ComposableHostingController<View>>
+
 @propertyWrapper
 public class ComposableStackDestination<
 	Controller: ComposableViewControllerProtocol

@@ -5,6 +5,9 @@ import ComposableArchitecture
 import DeclarativeConfiguration
 @_spi(Internals) import CombineNavigation
 
+public typealias ComposableViewTreeDestination<View: ComposableView>
+= ComposableTreeDestination<ComposableHostingController<View>>
+
 @propertyWrapper
 public class ComposableTreeDestination<Controller: ComposableViewControllerProtocol>: TreeDestination<Controller> {
 	public typealias State = Controller.State
