@@ -41,10 +41,18 @@ public class ComposableHostingController<ContentView: ComposableView>:
 	}
 
 	@inlinable
-	public convenience init() {
-		self.init(rootView: nil)
+	public init() {
+		super.init(rootView: nil)
 	}
 
+	required init?(coder: NSCoder) {
+		super.init(coder: coder)
+	}
+
+	public override init?(coder: NSCoder, rootView: ContentView?) {
+		super.init(coder: coder, rootView: rootView)
+	}
+	
 	public override func _init() {
 		super._init()
 		core.onScope { [weak self] in
