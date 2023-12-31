@@ -11,8 +11,8 @@ public typealias ComposableViewControllerProtocolOf<R: Reducer> = ComposableView
 >
 
 public protocol ComposableViewControllerProtocol<State, Action>:
-  CocoaViewController,
-  ComposableObjectProtocol
+	CocoaViewController,
+	ComposableObjectProtocol
 {}
 
 public typealias ComposableViewControllerOf<R: Reducer> = ComposableViewController<
@@ -21,8 +21,8 @@ public typealias ComposableViewControllerOf<R: Reducer> = ComposableViewControll
 >
 
 open class ComposableViewController<
-  State,
-  Action
+	State,
+	Action
 >: CustomCocoaViewController, ComposableViewControllerProtocol {
 	public typealias Store = ComposableArchitecture.Store<State, Action>
 	public typealias StorePublisher = ComposableArchitecture.StorePublisher<State>
@@ -107,15 +107,16 @@ extension ComposableViewControllerProtocol where Self: RoutingController {
 	) -> Cancellable {
 		guard let store = store else {
 			assertionFailure("""
-			Store was missing on \(#function) call in \
-			\(file) | \(line)
-			""")
+				Store was missing on \(#function) call in \
+				\(file) | \(line)
+				"""
+			)
 
 			return AnyCancellable {}
 		}
 
 		return navigationStack(
-			store.publisher.map(toStackState).removeDuplicates(by: { $0.ids == $1.ids }),
+			store.publisher.map(toStackState),
 			ids: \.ids,
 			route: { $0[id: $1] },
 			switch: destination,
@@ -143,16 +144,17 @@ extension ComposableViewControllerProtocol where Self: RoutingController {
 	) -> AnyCancellable {
 		guard let store = store else {
 			assertionFailure("""
-			Store was missing on \(#function) call in \
-			\(file) | \(line)
-			""")
+				Store was missing on \(#function) call in \
+				\(file) | \(line)
+				"""
+			)
 
 			return AnyCancellable {}
 		}
 
 		return navigationDestination(
 			toIsPresented,
-			isPresented: store.publisher[dynamicMember: toIsPresented],
+			isPresented: store.publisher.map(toIsPresented),
 			destination: destination,
 			onPop: { [weak self] in
 				self?.store?.send(popAction)
@@ -162,7 +164,7 @@ extension ComposableViewControllerProtocol where Self: RoutingController {
 
 	/// Subscribes on publisher of navigation destination state
 	@inlinable
-	public func navigationDestination<Route: Hashable>(
+	public func navigationDestination<Route>(
 		state toDestinationState: KeyPath<State, PresentationState<Route>>,
 		switch destination: @escaping (Destinations, Route) -> SingleDestinationProtocol,
 		popAction: Action,
@@ -171,42 +173,16 @@ extension ComposableViewControllerProtocol where Self: RoutingController {
 	) -> AnyCancellable where Route: Hashable {
 		guard let store = store else {
 			assertionFailure("""
-			Store was missing on \(#function) call in \
-			\(file) | \(line)
-			""")
+				Store was missing on \(#function) call in \
+				\(file) | \(line)
+				"""
+			)
 
 			return AnyCancellable {}
 		}
 
 		return navigationDestination(
-			store.publisher[dynamicMember: toDestinationState.appending(path: \.wrappedValue)],
-			switch: destination,
-			onPop: { [weak self] in
-				self?.store?.send(popAction)
-			}
-		)
-	}
-
-	/// Subscribes on publisher of navigation destination state
-	@inlinable
-	public func navigationDestination<Route: Taggable>(
-		state toDestinationState: KeyPath<State, PresentationState<Route>>,
-		switch destination: @escaping (Destinations, Route.Tag) -> SingleDestinationProtocol,
-		popAction: Action,
-		file: StaticString = #file,
-		line: UInt = #line
-	) -> AnyCancellable where Route: Hashable {
-		guard let store = store else {
-			assertionFailure("""
-			Store was missing on \(#function) call in \
-			\(file) | \(line)
-			""")
-
-			return AnyCancellable {}
-		}
-
-		return navigationDestination(
-			store.publisher[dynamicMember: toDestinationState.appending(path: \.wrappedValue?.tag)],
+			store.publisher.map(toDestinationState.appending(path: \.wrappedValue)),
 			switch: destination,
 			onPop: { [weak self] in
 				self?.store?.send(popAction)
@@ -214,5 +190,6 @@ extension ComposableViewControllerProtocol where Self: RoutingController {
 		)
 	}
 }
+
 #endif
 #endif

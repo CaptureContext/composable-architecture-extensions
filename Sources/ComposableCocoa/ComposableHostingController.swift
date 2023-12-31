@@ -30,14 +30,19 @@ public class ComposableHostingController<ContentView: ComposableView>:
 
 	@inlinable
 	public convenience init(store: Store?) {
-		self.init(rootView: nil)
+		self.init()
 		core.setStore(store)
 	}
 
 	@inlinable
 	public convenience init(store: ComposableArchitecture.Store<State?, Action>?) {
-		self.init(rootView: nil)
+		self.init()
 		core.setStore(store)
+	}
+
+	@inlinable
+	public convenience init() {
+		self.init(rootView: nil)
 	}
 
 	public override func _init() {

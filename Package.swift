@@ -33,10 +33,6 @@ let package = Package(
 			branch: "observation-beta"
 		),
 		.package(
-			url: "https://github.com/capturecontext/combine-extensions.git",
-			.upToNextMinor(from: "0.1.0")
-		),
-		.package(
 			url: "https://github.com/capturecontext/combine-cocoa-navigation.git",
 			branch: "navigation-stacks"
 		),
@@ -90,10 +86,6 @@ let package = Package(
 				.product(
 					name: "ComposableArchitecture",
 					package: "swift-composable-architecture"
-				),
-				.product(
-					name: "CombineExtensions",
-					package: "combine-extensions"
 				),
 				.product(
 					name: "FoundationExtensions",
