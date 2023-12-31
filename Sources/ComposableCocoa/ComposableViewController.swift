@@ -170,7 +170,7 @@ extension ComposableViewControllerProtocol where Self: RoutingController {
 		popAction: Action,
 		file: StaticString = #file,
 		line: UInt = #line
-	) -> AnyCancellable where Route: Hashable {
+	) -> AnyCancellable {
 		guard let store = store else {
 			assertionFailure("""
 				Store was missing on \(#function) call in \
