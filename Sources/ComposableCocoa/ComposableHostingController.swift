@@ -49,6 +49,14 @@ public class ComposableHostingController<ContentView: ComposableView>:
 		super.init(coder: coder)
 	}
 
+	public override init(rootView: ContentView?) {
+		super.init(rootView: rootView)
+	}
+
+	public init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
+		super.init(rootView: nil)
+	}
+
 	public override init?(coder: NSCoder, rootView: ContentView?) {
 		super.init(coder: coder, rootView: rootView)
 	}
