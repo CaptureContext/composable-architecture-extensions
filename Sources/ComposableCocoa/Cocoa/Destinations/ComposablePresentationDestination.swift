@@ -5,11 +5,11 @@ import ComposableArchitecture
 import DeclarativeConfiguration
 @_spi(Internals) import CombineNavigation
 
-public typealias ComposableViewTreeDestination<View: ComposableView>
+public typealias ComposableViewPresentationDestination<View: ComposableView>
 = ComposableTreeDestination<ComposableHostingController<View>>
 
 @propertyWrapper
-public class ComposableTreeDestination<Controller: ComposableViewControllerProtocol>: TreeDestination<Controller> {
+public class ComposablePresentationDestination<Controller: ComposableViewControllerProtocol>: PresentationDestination<Controller> {
 	public typealias State = Controller.State
 	public typealias Action = Controller.Action
 	public typealias Store = ComposableArchitecture.Store<State, Action>
@@ -19,7 +19,7 @@ public class ComposableTreeDestination<Controller: ComposableViewControllerProto
 	public override var wrappedValue: Controller? { super.wrappedValue }
 
 	@inlinable
-	public override var projectedValue: ComposableTreeDestination<Controller> { super.projectedValue as! Self }
+	public override var projectedValue: ComposablePresentationDestination<Controller> { super.projectedValue as! Self }
 
 	@usableFromInline
 	internal var store: () -> Store? = { nil }
@@ -76,9 +76,9 @@ public class ComposableTreeDestination<Controller: ComposableViewControllerProto
 	}
 
 	@_spi(Internals)
-	override public func _invalidateDestination() {
+	override public func _invalidate() {
 		self.releaseStore()
-		super._invalidateDestination()
+		super._invalidate()
 	}
 }
 #endif

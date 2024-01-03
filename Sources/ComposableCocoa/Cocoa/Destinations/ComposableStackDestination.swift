@@ -86,9 +86,9 @@ public class ComposableStackDestination<
 	}
 
 	@_spi(Internals)
-	override public func _invalidateDestination(for id: DestinationID) {
+	override public func _invalidate(_ id: DestinationID) {
 		self.releaseStore(for: id)
-		super._invalidateDestination(for: id)
+		super._invalidate(id)
 	}
 }
 #endif
