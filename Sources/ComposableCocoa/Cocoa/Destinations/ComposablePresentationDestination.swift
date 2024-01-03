@@ -6,7 +6,7 @@ import DeclarativeConfiguration
 @_spi(Internals) import CombineNavigation
 
 public typealias ComposableViewPresentationDestination<View: ComposableView>
-= ComposableTreeDestination<ComposableHostingController<View>>
+= ComposablePresentationDestination<ComposableHostingController<View>>
 
 @propertyWrapper
 public class ComposablePresentationDestination<Controller: ComposableViewControllerProtocol>: PresentationDestination<Controller> {
