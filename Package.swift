@@ -7,6 +7,7 @@ let package = Package(
 	platforms: [
 		.iOS(.v13),
 		.macOS(.v11),
+		.macCatalyst(.v13),
 		.tvOS(.v13),
 		.watchOS(.v6),
 	],
@@ -30,23 +31,24 @@ let package = Package(
 	dependencies: [
 		.package(
 			url: "https://github.com/pointfreeco/swift-composable-architecture.git",
-			branch: "observation-beta"
+			.upToNextMajor(from: "1.8.2")
 		),
 		.package(
 			url: "https://github.com/capturecontext/combine-cocoa-navigation.git",
 			branch: "navigation-stacks"
 		),
+//		.package(path: "../combine-cocoa-navigation"),
 		.package(
 			url: "https://github.com/capturecontext/swift-declarative-configuration.git",
 			.upToNextMinor(from: "0.3.3")
 		),
 		.package(
 			url: "https://github.com/capturecontext/swift-cocoa-extensions.git",
-			.upToNextMinor(from: "0.3.4")
+			.upToNextMinor(from: "0.4.0")
 		),
 		.package(
 			url: "https://github.com/capturecontext/swift-foundation-extensions.git",
-			.upToNextMinor(from: "0.4.0")
+			.upToNextMinor(from: "0.5.0")
 		)
 	],
 	targets: [
@@ -61,7 +63,7 @@ let package = Package(
 			dependencies: [
 				.target(name: "ComposableCore"),
 				.product(
-					name: "CocoaExtensions",
+					name: "CocoaExtensionsMacros",
 					package: "swift-cocoa-extensions"
 				),
 				.product(
@@ -88,7 +90,7 @@ let package = Package(
 					package: "swift-composable-architecture"
 				),
 				.product(
-					name: "FoundationExtensions",
+					name: "FoundationExtensionsMacros",
 					package: "swift-foundation-extensions"
 				),
 			]

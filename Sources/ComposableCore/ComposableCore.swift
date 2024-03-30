@@ -20,7 +20,7 @@ public final class ComposableCore<State, Action>: ComposableObjectProtocol {
 	}
 
 	@inlinable
-	public convenience init(store: ComposableArchitecture.Store<State?, Action>?) {
+	public convenience init(store: ComposableArchitecture.Store<State?, Action>) {
 		self.init()
 		setStore(store)
 	}
@@ -70,15 +70,16 @@ public final class ComposableCore<State, Action>: ComposableObjectProtocol {
 	/// Sets a new store with an optional state
 	@inlinable
 	public func setStore(
-		_ store: ComposableArchitecture.Store<State?, Action>?
+		_ store: ComposableArchitecture.Store<State?, Action>
 	) {
-		guard let store = store else { return releaseStore() }
-
+		print("dr:ss:")
 		storeCancellable = store.ifLet(
 			then: { [weak self] store in
+				print("dr:ss:true")
 				self?.setStore(store)
 			},
 			else: { [weak self] in
+				print("dr:ss:false")
 				self?.releaseStore()
 			}
 		)
@@ -86,7 +87,12 @@ public final class ComposableCore<State, Action>: ComposableObjectProtocol {
 
 	/// Sets a new store
 	@inlinable
-	public func setStore(_ store: Store?) {
+	public func setStore(_ store: Store) {
+		_setStore(store)
+	}
+
+	@usableFromInline
+	internal func _setStore(_ store: Store?) {
 		self.storeCancellable = nil
 		let oldStore = self.store
 		self.storeWillSet(from: oldStore, to: store)
@@ -98,7 +104,7 @@ public final class ComposableCore<State, Action>: ComposableObjectProtocol {
 
 	@inlinable
 	public func releaseStore() {
-		setStore(Store?.none)
+		_setStore(nil)
 	}
 
 	@usableFromInline

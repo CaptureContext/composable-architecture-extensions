@@ -4,25 +4,17 @@ import CocoaAliases
 import Combine
 import CocoaExtensions
 import ComposableArchitecture
-
-#if canImport(UIKit)
-import CombineNavigation
-extension ComposableHostingController: DestinationInitializableControllerProtocol {
-	public static func _init_for_destination() -> CocoaViewController {
-		return Self.init()
-	}
-}
-#endif
+@_spi(Internals) import CombineNavigation
 
 public protocol ComposableHostingControllerProtocol<ContentView>:
-	CustomHostingController<Self.ContentView?>,
+	CombineNavigationHostingController<Self.ContentView>,
 	ComposableViewControllerProtocol
 where State == ContentView.State, Action == ContentView.Action {
 	associatedtype ContentView: ComposableView
 }
 
-public class ComposableHostingController<ContentView: ComposableView>:
-	CustomHostingController<ContentView?>,
+open class ComposableHostingController<ContentView: ComposableView>:
+	CombineNavigationHostingController<ContentView>,
 	ComposableHostingControllerProtocol
 {
 	public typealias State = ContentView.State
@@ -38,61 +30,64 @@ public class ComposableHostingController<ContentView: ComposableView>:
 	public var store: Store? { core.store }
 
 	@inlinable
-	public convenience init(store: Store?) {
+	public convenience init(store: Store) {
 		self.init()
 		core.setStore(store)
 	}
 
 	@inlinable
-	public convenience init(store: ComposableArchitecture.Store<State?, Action>?) {
+	public convenience init(store: ComposableArchitecture.Store<State?, Action>) {
 		self.init()
 		core.setStore(store)
-	}
-
-	public required init() {
-		super.init(rootView: nil)
-	}
-
-	required init?(coder: NSCoder) {
-		super.init(coder: coder)
-	}
-
-	public override init(rootView: ContentView?) {
-		super.init(rootView: rootView)
-	}
-
-	public init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
-		super.init(rootView: nil)
-	}
-
-	public override init?(coder: NSCoder, rootView: ContentView?) {
-		super.init(coder: coder, rootView: rootView)
 	}
 	
 	public override func _init() {
 		super._init()
-		core.onScope { [weak self] in
-			self?.rootView = $0.map(ContentView.init)
-		}
+		core.onStoreWillSet { [weak self] in self?.storeWillSet(from: $0, to: $1) }
+		core.onStoreDidSet { [weak self] in self?.storeDidSet(from: $0, to: $1) }
+		core.onScope { [weak self] in self?.scope($0) }
+		core.onBind { [weak self] in self?.bind($0, into: &$1.wrappedValue) }
 	}
 
 	/// Sets a new store with an optional state
 	@inlinable
-	public func setStore(
-		_ store: ComposableArchitecture.Store<State?, Action>?
+	open func setStore(
+		_ store: ComposableArchitecture.Store<State?, Action>
 	) {
 		core.setStore(store)
 	}
 
 	/// Sets a new store
 	@inlinable
-	public func setStore(_ store: Store?) {
+	open func setStore(_ store: Store) {
 		core.setStore(store)
 	}
 
 	@inlinable
-	public func releaseStore() {
+	open func releaseStore() {
 		core.releaseStore()
 	}
+
+	open func storeWillSet(
+		from oldStore: Store?,
+		to newStore: Store?
+	) {}
+
+	open func storeDidSet(
+		from oldStore: Store?,
+		to newStore: Store?
+	) {}
+
+	open func scope(
+		_ store: Store?
+	) {
+		print("drscope:", store.isNotNil)
+		self.contentView = ContentView?(store)
+	}
+
+	open func bind(
+		_ publisher: StorePublisher,
+		into cancellables: inout Cancellables
+	) {}
 }
 #endif

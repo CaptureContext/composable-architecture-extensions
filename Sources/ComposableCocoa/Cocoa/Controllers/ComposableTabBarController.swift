@@ -4,6 +4,7 @@ import CocoaAliases
 import Combine
 import CocoaExtensions
 import ComposableArchitecture
+@_spi(Internals) import CombineNavigation
 
 public typealias ComposableTabBarControllerProtocolOf<R: Reducer> = ComposableTabBarControllerProtocol<
 	R.State,
@@ -35,13 +36,14 @@ open class ComposableTabBarController<State, Action>:
 	public var store: Store? { core.store }
 
 	@inlinable
-	public convenience init(store: Store?) {
+  @_disfavoredOverload
+	public convenience init(store: Store) {
 		self.init()
 		core.setStore(store)
 	}
 
 	@inlinable
-	public convenience init(store: ComposableArchitecture.Store<State?, Action>?) {
+	public convenience init(store: ComposableArchitecture.Store<State?, Action>) {
 		self.init()
 		core.setStore(store)
 	}
@@ -57,14 +59,15 @@ open class ComposableTabBarController<State, Action>:
 	/// Sets a new store with an optional state
 	@inlinable
 	public func setStore(
-		_ store: ComposableArchitecture.Store<State?, Action>?
+		_ store: ComposableArchitecture.Store<State?, Action>
 	) {
 		core.setStore(store)
 	}
 
 	/// Sets a new store
 	@inlinable
-	public func setStore(_ store: Store?) {
+  @_disfavoredOverload
+	public func setStore(_ store: Store) {
 		core.setStore(store)
 	}
 
@@ -88,7 +91,7 @@ open class ComposableTabBarController<State, Action>:
 	) {}
 
 	open func bind(
-		_ state: StorePublisher,
+		_ publisher: StorePublisher,
 		into cancellables: inout Cancellables
 	) {}
 }

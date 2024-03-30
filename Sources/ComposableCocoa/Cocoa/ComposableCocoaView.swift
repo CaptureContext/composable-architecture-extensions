@@ -10,8 +10,8 @@ public typealias ComposableCocoaViewProtocolOf<R: Reducer> = ComposableCocoaView
 >
 
 public protocol ComposableCocoaViewProtocol<State, Action>:
-  CocoaView,
-  ComposableObjectProtocol
+	CocoaView,
+	ComposableObjectProtocol
 {}
 
 public typealias ComposableCocoaViewOf<R: Reducer> = ComposableCocoaView<
@@ -20,8 +20,8 @@ public typealias ComposableCocoaViewOf<R: Reducer> = ComposableCocoaView<
 >
 
 open class ComposableCocoaView<
-  State,
-  Action
+	State,
+	Action
 >: CustomCocoaView, ComposableCocoaViewProtocol {
 	public typealias Store = ComposableArchitecture.Store<State, Action>
 	public typealias StorePublisher = ComposableArchitecture.StorePublisher<State>
@@ -34,13 +34,13 @@ open class ComposableCocoaView<
 	public var store: Store? { core.store }
 
 	@inlinable
-	public convenience init(store: Store?) {
+	public convenience init(store: Store) {
 		self.init()
 		core.setStore(store)
 	}
 
 	@inlinable
-	public convenience init(store: ComposableArchitecture.Store<State?, Action>?) {
+	public convenience init(store: ComposableArchitecture.Store<State?, Action>) {
 		self.init()
 		core.setStore(store)
 	}
@@ -56,14 +56,14 @@ open class ComposableCocoaView<
 	/// Sets a new store with an optional state
 	@inlinable
 	public func setStore(
-		_ store: ComposableArchitecture.Store<State?, Action>?
+		_ store: ComposableArchitecture.Store<State?, Action>
 	) {
 		core.setStore(store)
 	}
 
 	/// Sets a new store
 	@inlinable
-	public func setStore(_ store: Store?) {
+	public func setStore(_ store: Store) {
 		core.setStore(store)
 	}
 

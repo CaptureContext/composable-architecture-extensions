@@ -19,13 +19,13 @@ open class ComposableObject<State, Action>: ComposableObjectProtocol {
 	public var store: Store? { core.store }
 
 	@inlinable
-	public convenience init(store: Store?) {
+	public convenience init(store: Store) {
 		self.init()
 		core.setStore(store)
 	}
 
 	@inlinable
-	public convenience init(store: ComposableArchitecture.Store<State?, Action>?) {
+	public convenience init(store: ComposableArchitecture.Store<State?, Action>) {
 		self.init()
 		core.setStore(store)
 	}
@@ -40,14 +40,14 @@ open class ComposableObject<State, Action>: ComposableObjectProtocol {
 	/// Sets a new store with an optional state
 	@inlinable
 	public func setStore(
-		_ store: ComposableArchitecture.Store<State?, Action>?
+		_ store: ComposableArchitecture.Store<State?, Action>
 	) {
 		core.setStore(store)
 	}
 
 	/// Sets a new store
 	@inlinable
-	public func setStore(_ store: Store?) {
+	public func setStore(_ store: Store) {
 		core.setStore(store)
 	}
 
