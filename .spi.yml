@@ -1,0 +1,34 @@
+version: 1
+builder:
+  configs:
+  - platform: ios
+    documentation_targets:
+    - ComposableCocoa
+    - ComposableSwiftUI
+
+  - platform: macos-spm
+    documentation_targets:
+    - ComposableCocoa
+    - ComposableSwiftUI
+
+  - platform: tvos
+    documentation_targets:
+    - ComposableCocoa
+    - ComposableSwiftUI
+
+  - platform: watchos
+    documentation_targets:
+    - ComposableCocoa
+    - ComposableSwiftUI
+
+  - platform: macos-xcodebuild
+  - platform: android
+
+  - platform: linux
+    swift_version: '5.9'
+
+  - platform: linux
+    swift_version: '6.0'
+
+  - documentation_targets:
+    - ComposableCore
