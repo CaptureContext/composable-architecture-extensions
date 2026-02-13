@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 5.9
 
 import PackageDescription
 
@@ -21,11 +21,6 @@ let package = Package(
 			name: "ComposableCocoa",
 			type: .static,
 			targets: ["ComposableCocoa"]
-		),
-		.library(
-			name: "ComposableSwiftUI",
-			type: .static,
-			targets: ["ComposableSwiftUI"]
 		),
 		.library(
 			name: "ComposableCore",
@@ -140,6 +135,5 @@ let package = Package(
 				.target(name: "ComposableExtensionsCore"),
 			]
 		),
-	],
-	swiftLanguageModes: [.v6]
+	]
 )
