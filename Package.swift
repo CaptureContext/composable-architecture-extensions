@@ -123,12 +123,6 @@ let package = Package(
 		// MARK: - Tests
 
 		.testTarget(
-			name: "ComposableCocoaTests",
-			dependencies: [
-				.target(name: "ComposableCocoa"),
-			]
-		),
-		.testTarget(
 			name: "ComposableCoreTests",
 			dependencies: [
 				.target(name: "ComposableCore"),

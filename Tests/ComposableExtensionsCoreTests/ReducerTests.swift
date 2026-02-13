@@ -1,8 +1,10 @@
 import ComposableExtensionsCore
-import XCTest
+import Testing
 import FoundationExtensions
 
-final class ReducerTests: XCTestCase {
+@MainActor
+@Suite
+struct ReducerTests {
 	@Reducer
 	struct Feature {
 		@ObservableState
@@ -33,7 +35,8 @@ final class ReducerTests: XCTestCase {
 		}
 	}
 
-	func testOnChange() async {
+	@Test
+	func onChange() async throws {
 		let store = TestStore(
 			initialState: .init(value: 1),
 			reducer: { Feature()
@@ -70,7 +73,7 @@ final class ReducerTests: XCTestCase {
 
 	@Reducer
 	struct ValueSetter {
-		static var initCount = 0
+		nonisolated(unsafe) static var initCount = 0
 
 		@ObservableState
 		struct State: Equatable {
@@ -98,7 +101,8 @@ final class ReducerTests: XCTestCase {
 		}
 	}
 
-	func testLazyReducer() async {
+	@Test
+	func lazyReducer() async throws {
 		let store = TestStore(
 			initialState: ValueSetter.State(),
 			reducer: {
@@ -106,12 +110,12 @@ final class ReducerTests: XCTestCase {
 			}
 		)
 
-		XCTAssertEqual(ValueSetter.initCount, 0)
+		#expect(ValueSetter.initCount == 0)
 
 		await store.send(.setValue(10)) { state in
 			state.value = 10
 		}
 
-		XCTAssertEqual(ValueSetter.initCount, 1)
+		#expect(ValueSetter.initCount == 1)
 	}
 }

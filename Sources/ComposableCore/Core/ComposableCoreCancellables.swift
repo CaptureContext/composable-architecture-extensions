@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import SwiftNavigation
 
 public class ComposableCoreCancellables: @unchecked Sendable {
 	private let lock: NSLocking = NSRecursiveLock()
@@ -56,3 +57,5 @@ extension Cancellable {
 		coreCancellables._withLock { $0.storage[key] = self }
 	}
 }
+
+extension ObserveToken: @retroactive Cancellable {}

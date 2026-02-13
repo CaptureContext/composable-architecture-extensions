@@ -1,7 +1,9 @@
-import XCTest
+import Testing
 @testable import ComposableCore
 
-final class ComposableCoreTests: XCTestCase {
+@MainActor
+@Suite
+struct ComposableCoreTests {
 	@Reducer
 	struct DerivedFeature {
 		@ObservableState
@@ -57,25 +59,23 @@ final class ComposableCoreTests: XCTestCase {
 	> {
 		var value: Int?
 
-		func increment() { store?.send(.inc) }
+		func increment() { core.store?.send(.inc) }
 
-		func decrement() { store?.send(.dec) }
+		func decrement() { core.store?.send(.dec) }
 
 		override func bind(
-			_ state: StorePublisher,
-			into cancellables: inout Cancellables
+			_ store: Store,
+			into cancellables: Core.Cancellables
 		) {
-			state.value
-				.sink(receiveValue: { [weak self] value in
-					self?.value = value
-				})
-				.store(in: &cancellables)
+			observe { [weak self] in
+				self?.value = store.value
+			}.store(in: cancellables)
 		}
 	}
 
 	class ParentFeatureObject: ComposableObject<
-	ParentFeature.State,
-	ParentFeature.Action
+		ParentFeature.State,
+		ParentFeature.Action
 	> {
 		var derived: DerivedFeatureObject = .init()
 		var value: Int?
@@ -88,14 +88,12 @@ final class ComposableCoreTests: XCTestCase {
 		}
 
 		override func bind(
-			_ state: StorePublisher,
-			into cancellables: inout Cancellables
+			_ store: Store,
+			into cancellables: Core.Cancellables
 		) {
-			state.derived.value
-				.sink(receiveValue: { [weak self] value in
-					self?.value = value
-				})
-				.store(in: &cancellables)
+			observe { [weak self] in
+				self?.value = store.derived.value
+			}.store(in: cancellables)
 		}
 	}
 
@@ -104,10 +102,10 @@ final class ComposableCoreTests: XCTestCase {
 		let derived = parent.derived
 
 		do {
-			XCTAssertEqual(parent.store?.derived, derived.store?.state)
-			XCTAssertEqual(derived.store?.value, nil)
-			XCTAssertEqual(parent.value, derived.value)
-			XCTAssertEqual(derived.value, nil)
+			#expect(parent.core.store?.derived == derived.core.store?.state)
+			#expect(derived.core.store?.value == nil)
+			#expect(parent.value == derived.value)
+			#expect(derived.value == nil)
 		}
 
 		do {
@@ -116,48 +114,48 @@ final class ComposableCoreTests: XCTestCase {
 				reducer: ParentFeature.init
 			))
 
-			XCTAssertEqual(parent.store?.derived, derived.store?.state)
-			XCTAssertEqual(derived.store?.value, 0)
-			XCTAssertEqual(parent.value, derived.value)
-			XCTAssertEqual(derived.value, 0)
+			#expect(parent.core.store?.derived == derived.core.store?.state)
+			#expect(derived.core.store?.value == 0)
+			#expect(parent.value == derived.value)
+			#expect(derived.value == 0)
 		}
 
 		do {
 			derived.increment()
 
-			XCTAssertEqual(parent.store?.derived, derived.store?.state)
-			XCTAssertEqual(derived.store?.value, 1)
-			XCTAssertEqual(parent.value, derived.value)
-			XCTAssertEqual(derived.value, 1)
+			#expect(parent.core.store?.derived == derived.core.store?.state)
+			#expect(derived.core.store?.value == 1)
+			#expect(parent.value == derived.value)
+			#expect(derived.value == 1)
 		}
 
 		do {
-			derived.store?.send(.inc)
+			derived.core.store?.send(.inc)
 
-			XCTAssertEqual(parent.store?.derived, derived.store?.state)
-			XCTAssertEqual(derived.store?.value, 2)
-			XCTAssertEqual(parent.value, derived.value)
-			XCTAssertEqual(derived.value, 2)
+			#expect(parent.core.store?.derived == derived.core.store?.state)
+			#expect(derived.core.store?.value == 2)
+			#expect(parent.value == derived.value)
+			#expect(derived.value == 2)
 		}
 
 		do {
-			parent.store?.send(.derived(.inc))
+			parent.core.store?.send(.derived(.inc))
 
-			XCTAssertEqual(parent.store?.derived, derived.store?.state)
-			XCTAssertEqual(derived.store?.value, 3)
-			XCTAssertEqual(parent.value, derived.value)
-			XCTAssertEqual(derived.value, 3)
+			#expect(parent.core.store?.derived == derived.core.store?.state)
+			#expect(derived.core.store?.value == 3)
+			#expect(parent.value == derived.value)
+			#expect(derived.value == 3)
 		}
 
 		do {
-			parent.derived.store?.send(.dec)
-			derived.store?.send(.dec)
+			parent.derived.core.store?.send(.dec)
+			derived.core.store?.send(.dec)
 			derived.decrement()
 
-			XCTAssertEqual(parent.store?.derived, derived.store?.state)
-			XCTAssertEqual(derived.store?.value, 0)
-			XCTAssertEqual(parent.value, derived.value)
-			XCTAssertEqual(derived.value, 0)
+			#expect(parent.core.store?.derived == derived.core.store?.state)
+			#expect(derived.core.store?.value == 0)
+			#expect(parent.value == derived.value)
+			#expect(derived.value == 0)
 		}
 	}
 }
