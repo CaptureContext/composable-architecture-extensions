@@ -15,12 +15,9 @@ public protocol ComposableView<State, Action>: View {
 }
 
 extension Optional where Wrapped: ComposableView {
+	@MainActor
 	public init(_ store: Store<Wrapped.State, Wrapped.Action>?) {
-		self = store.map(Wrapped.init)
+		self = store.map { Wrapped($0) }
 	}
-}
-
-extension ComposableView {
-	public typealias HostingController = ComposableHostingController<Self>
 }
 #endif

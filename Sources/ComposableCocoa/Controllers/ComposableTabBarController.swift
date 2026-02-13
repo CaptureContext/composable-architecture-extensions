@@ -1,13 +1,24 @@
+#if canImport(UIKit) && !os(watchOS)
 import ComposableArchitecture
 import Combine
-import Foundation
+import CocoaExtensions
+@_spi(Internals) import ComposableCore
 
-public typealias ComposableObjectOf<R: Reducer> = ComposableObject<
-	R.State,
-	R.Action
+public typealias ComposableTabBarControllerOf<
+	Feature: Reducer
+> = ComposableTabBarController<
+	Feature.State,
+	Feature.Action
 >
 
-open class ComposableObject<State, Action>: ComposableObjectProtocol {
+@_spi(Internals)
+extension ComposableTabBarController: ComposableCoreDelegate {}
+
+open class ComposableTabBarController<State, Action>:
+	CustomCocoaViewController,
+	ComposableObjectProtocol,
+	ComposableViewControllerProtocol
+{
 	public typealias Core = ComposableCore<State, Action>
 	public typealias Store = ComposableArchitecture.Store<State, Action>
 
@@ -23,40 +34,25 @@ open class ComposableObject<State, Action>: ComposableObjectProtocol {
 	@inlinable
 	public var store: Store? { core.store }
 
-	@inlinable
-	public convenience init(store: Store) {
-		self.init()
-		core.setStore(store)
+	open override func _init() {
+		super._init()
+		self.core.delegate = self
+	}
+
+	open override func viewDidLoad() {
+		super.viewDidLoad()
+		self.core.setStoreFromCache()
+	}
+
+	@_spi(Internals)
+	public var setStoreMode: ComposableCoreSetStoreMode {
+		return isViewLoaded ? .update : .cache
 	}
 
 	@inlinable
-	public convenience init(store: ComposableArchitecture.Store<State?, Action>) {
-		self.init()
-		core.setStore(store)
-	}
-
-	public init() {
-		core.delegate = self
-	}
-
-	/// Sets a new store with an optional state
-	@inlinable
-	public func setStore(
-		_ store: ComposableArchitecture.Store<State?, Action>
-	) {
-		core.setStore(store)
-	}
-
-	/// Sets a new store
-	@inlinable
-	public func setStore(_ store: Store) {
-		core.setStore(store)
-	}
-
-	@inlinable
-	public func releaseStore() {
-		core.releaseStore()
-	}
+	open func scope(
+		_ store: Store?
+	) {}
 
 	@inlinable
 	open func storeWillSet(
@@ -68,11 +64,6 @@ open class ComposableObject<State, Action>: ComposableObjectProtocol {
 	open func storeDidSet(
 		from oldStore: Store?,
 		to newStore: Store?
-	) {}
-
-	@inlinable
-	open func scope(
-		_ store: Store?
 	) {}
 
 	@available(
@@ -112,5 +103,4 @@ open class ComposableObject<State, Action>: ComposableObjectProtocol {
 	}
 }
 
-@_spi(Internals)
-extension ComposableObject: ComposableCoreDelegate {}
+#endif

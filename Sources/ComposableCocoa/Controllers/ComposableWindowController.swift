@@ -1,7 +1,7 @@
 #if os(macOS)
-import ComposableCore
-import CocoaExtensions
 import Combine
+import CocoaExtensions
+@_spi(Internals) import ComposableCore
 
 public typealias ComposableWindowControllerProtocolOf<R: Reducer> = ComposableWindowControllerProtocol<
 	R.State,
@@ -18,20 +18,29 @@ public typealias ComposableWindowControllerOf<R: Reducer> = ComposableWindowCont
 	R.Action
 >
 
+@_spi(Internals)
+extension ComposableWindowController: ComposableCoreDelegate {}
+
 open class ComposableWindowController<
   State,
   Action
 >:
   CustomCocoaWindowController,
+	ComposableObjectProtocol,
 	ComposableWindowControllerProtocol
 {
+	public typealias Core = ComposableCore<State, Action>
 	public typealias Store = ComposableArchitecture.Store<State, Action>
+
+	@available(*, deprecated)
 	public typealias StorePublisher = ComposableArchitecture.StorePublisher<State>
+
+	@available(*, deprecated, renamed: "Core.Cancellables")
 	public typealias Cancellables = Set<AnyCancellable>
 
-	@usableFromInline
-	internal let core: ComposableCore<State, Action> = .init()
+	public let core: Core = .init()
 
+	@available(*, deprecated, renamed: "core.store")
 	@inlinable
 	public var store: Store? { core.store }
 
@@ -49,10 +58,17 @@ open class ComposableWindowController<
 
 	override open func _init() {
 		super._init()
-		core.onStoreWillSet { [weak self] in self?.storeWillSet(from: $0, to: $1) }
-		core.onStoreDidSet { [weak self] in self?.storeDidSet(from: $0, to: $1) }
-		core.onScope { [weak self] in self?.scope($0) }
-		core.onBind { [weak self] in self?.bind($0, into: &$1.wrappedValue) }
+		self.core.delegate = self
+	}
+
+	open override func windowDidLoad() {
+		super.windowDidLoad()
+		self.core.setStoreFromCache()
+	}
+
+	@_spi(Internals)
+	public var setStoreMode: ComposableCoreSetStoreMode {
+		isWindowLoaded ? .update : .cache
 	}
 
 	/// Sets a new store with an optional state
@@ -88,9 +104,40 @@ open class ComposableWindowController<
 		_ store: Store?
 	) {}
 
+	@available(
+		*, deprecated,
+		message: """
+		Use `bind(_:into:)` with non-inout Core.Cancellables instead.
+		"""
+	)
+	@inlinable
 	open func bind(
-		_ state: StorePublisher,
-		into cancellables: inout Cancellables
+		_ store: Store,
+		into cancellables: inout Set<AnyCancellable>
 	) {}
+
+	@available(
+		*, deprecated,
+		message: """
+		Use `bind(_:into:)` with non-inout Core.Cancellables instead.
+		"""
+	)
+	@inlinable
+	open func bind(
+		_ store: Store,
+		into cancellables: inout Core.Cancellables
+	) {
+		self.bind(store, into: cancellables)
+	}
+
+	@inlinable
+	open func bind(
+		_ store: Store,
+		into cancellables: Core.Cancellables
+	) {
+		var deprecatedCancellables: Set<AnyCancellable> = []
+		self.bind(store, into: &deprecatedCancellables)
+		deprecatedCancellables.forEach { $0.store(in: cancellables) }
+	}
 }
 #endif

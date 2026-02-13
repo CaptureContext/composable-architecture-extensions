@@ -11,21 +11,38 @@ public struct Pullback<State, Action: CasePathable, ChildAction>: Reducer {
 	@usableFromInline
 	let reduce: (inout State, ChildAction) -> Effect<Action>
 
-//	@inlinable
-//	public init<R: Reducer<State, ChildAction>>(
-//		_ toChildAction: CaseKeyPath<Action, ChildAction>,
-//		@ReducerBuilder<State, ChildAction> reducer: () -> R
-//	) {
-//		let reducer = reducer()
-//		self.init(
-//			action: toChildAction,
-//			reduce: { state, action in
-//				reducer.reduce(into: &state, action: action).map { action in
-//					toChildAction(action)
-//				}
-//			}
-//		)
-//	}
+	@_disfavoredOverload
+	@inlinable
+	public init<R: Reducer<State, ChildAction>>(
+		_ toChildAction: CaseKeyPath<Action, ChildAction> & Sendable,
+		@ReducerBuilder<State, ChildAction> reducer: () -> R
+	) where Action: Sendable {
+		let reducer = reducer()
+		self.init(
+			action: toChildAction,
+			reduce: { state, action in
+				reducer.reduce(into: &state, action: action).map { action in
+					toChildAction(action)
+				}
+			}
+		)
+	}
+
+	/// Intializer that won't confilct with other inits
+	///
+	/// This init hepls detecting ambiguouty reason.
+	/// > Usually the reason is returning an action instead of `Effect<Action>`
+	@available(*, deprecated, renamed: "init(_:reduce:)", message: "For debugging only")
+	@inlinable
+	public static func __detect_ambiguouty_reason_2args(
+		_ toChildAction: CaseKeyPath<Action, ChildAction>,
+		reduce: @escaping (inout State, ChildAction) -> Effect<Action>
+	) -> Self {
+		Pullback(
+			toChildAction,
+			reduce: reduce
+		)
+	}
 
 	@inlinable
 	public init(
@@ -59,10 +76,26 @@ public struct Pullback<State, Action: CasePathable, ChildAction>: Reducer {
 
 // MARK: - Void
 
-extension Pullback where ChildAction == Void {
+extension Pullback {
+	/// Intializer that won't confilct with other inits
+	///
+	/// This init hepls detecting ambiguouty reason.
+	/// > Usually the reason is returning an action instead of `Effect<Action>`
+	@available(*, deprecated, renamed: "init(_:reduce:)", message: "For debugging only")
+	@inlinable
+	public static func __detect_ambiguouty_reason_1arg(
+		_ toChildAction: CaseKeyPath<Action, ChildAction>,
+		reduce: @escaping (inout State) -> Effect<Action>
+	) -> Self {
+		Pullback(
+			toChildAction,
+			reduce: reduce
+		)
+	}
+
 	@inlinable
 	public init(
-		_ toChildAction: CaseKeyPath<Action, Void>,
+		_ toChildAction: CaseKeyPath<Action, ChildAction>,
 		reduce: @escaping (inout State) -> Effect<Action>
 	) {
 		self.init(
@@ -101,9 +134,9 @@ extension Pullback {
 			toIdentifiedAction,
 			reduce: { state, id, action in
 				guard let action = action[case: toDerivedAction]
-				 else { return .none }
+				else { return .none }
 
-				 return reduce(&state, id, action)
+				return reduce(&state, id, action)
 			}
 		)
 	}

@@ -2,18 +2,22 @@ import ComposableArchitecture
 import Combine
 import Foundation
 
-public typealias ComposableNSObjectOf<R: Reducer> = ComposableObject<
+public typealias ComposableNSObjectOf<R: Reducer> = ComposableNSObject<
 	R.State,
 	R.Action
 >
 
 open class ComposableNSObject<State, Action>: NSObject, ComposableObjectProtocol {
+	public typealias Core = ComposableCore<State, Action>
 	public typealias Store = ComposableArchitecture.Store<State, Action>
+
+	@available(*, deprecated)
 	public typealias StorePublisher = ComposableArchitecture.StorePublisher<State>
+
+	@available(*, deprecated, renamed: "Core.Cancellables")
 	public typealias Cancellables = Set<AnyCancellable>
 
-	@usableFromInline
-	internal let core: ComposableCore<State, Action> = .init()
+	public let core: Core = .init()
 
 	@inlinable
 	public var store: Store? { core.store }
@@ -21,21 +25,18 @@ open class ComposableNSObject<State, Action>: NSObject, ComposableObjectProtocol
 	@inlinable
 	public convenience init(store: Store) {
 		self.init()
-		setStore(store)
+		core.setStore(store)
 	}
 
 	@inlinable
 	public convenience init(store: ComposableArchitecture.Store<State?, Action>) {
 		self.init()
-		setStore(store)
+		core.setStore(store)
 	}
 
 	public override init() {
 		super.init()
-		core.onStoreWillSet { [weak self] in self?.storeWillSet(from: $0, to: $1) }
-		core.onStoreDidSet { [weak self] in self?.storeDidSet(from: $0, to: $1) }
-		core.onScope { [weak self] in self?.scope($0) }
-		core.onBind { [weak self] in self?.bind($0, into: &$1.wrappedValue) }
+		core.delegate = self
 	}
 
 	/// Sets a new store with an optional state
@@ -57,22 +58,59 @@ open class ComposableNSObject<State, Action>: NSObject, ComposableObjectProtocol
 		core.releaseStore()
 	}
 
+	@inlinable
 	open func storeWillSet(
 		from oldStore: Store?,
 		to newStore: Store?
 	) {}
 
+	@inlinable
 	open func storeDidSet(
 		from oldStore: Store?,
 		to newStore: Store?
 	) {}
 
+	@inlinable
 	open func scope(
 		_ store: Store?
 	) {}
 
+	@available(
+		*, deprecated,
+		message: """
+		Use `bind(_:into:)` with non-inout Core.Cancellables instead.
+		"""
+	)
+	@inlinable
 	open func bind(
-		_ state: StorePublisher,
-		into cancellables: inout Cancellables
+		_ store: Store,
+		into cancellables: inout Set<AnyCancellable>
 	) {}
+
+	@available(
+		*, deprecated,
+		message: """
+		Use `bind(_:into:)` with non-inout Core.Cancellables instead.
+		"""
+	)
+	@inlinable
+	open func bind(
+		_ store: Store,
+		into cancellables: inout Core.Cancellables
+	) {
+		self.bind(store, into: cancellables)
+	}
+
+	@inlinable
+	open func bind(
+		_ store: Store,
+		into cancellables: Core.Cancellables
+	) {
+		var deprecatedCancellables: Set<AnyCancellable> = []
+		self.bind(store, into: &deprecatedCancellables)
+		deprecatedCancellables.forEach { $0.store(in: cancellables) }
+	}
 }
+
+@_spi(Internals)
+extension ComposableNSObject: ComposableCoreDelegate {}
