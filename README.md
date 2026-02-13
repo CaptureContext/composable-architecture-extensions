@@ -210,7 +210,7 @@ If you use SwiftPM for your project structure, add `composable-architecture-exte
 ```swift
 .package(
   url: "https://github.com/capturecontext/composable-architecture-extensions.git", 
-  .upToNextMinor("0.3.0")
+  .upToNextMinor("0.3.0-alpha.1")
 )
 ```
 
