@@ -1,6 +1,6 @@
 # composable-architecture-extensions
 
-[![Swift 6.0](https://img.shields.io/badge/Swift-6.0_|_5.9-ED523F.svg?style=flat)](https://swift.org/download/) ![Platforms](https://img.shields.io/badge/Platforms-iOS_13_|_macOS_10.15_|_Catalyst_|_tvOS_14_|_watchOS_7-ED523F.svg?style=flat) [![@capture_context](https://img.shields.io/badge/Contact-@capture__context-1DA1F2.svg?style=flat&logo=twitter)](https://twitter.com/capture_context) 
+[![CI](https://github.com/capturecontext/composable-architecture-extensions/actions/workflows/ci.yml/badge.svg)](https://github.com/capturecontext/composable-architecture-extensions/actions/workflows/ci.yml) [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fcapturecontext%2Fcomposable-architecture-extensions%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/capturecontext/composable-architecture-extensions) [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fcapturecontext%2Fcomposable-architecture-extensions%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/capturecontext/composable-architecture-extensions)
 
 Extensions for [TCA](https://github.com/pointfreeco/swift-composable-architecture).
 
