@@ -1,9 +1,6 @@
 .DS_Store
-/.build
-/Packages
-/*.xcodeproj
+.build
 xcuserdata/
+Build/
 DerivedData/
-.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
-ComposableExtensions.xcworkspace
 Package.resolved
