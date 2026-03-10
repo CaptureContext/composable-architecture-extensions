@@ -1,4 +1,4 @@
-#if !os(watchOS)
+#if canImport(UIKit) && !os(watchOS)
 import ComposableArchitecture
 import Combine
 import CocoaAliases
